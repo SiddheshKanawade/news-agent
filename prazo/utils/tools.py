@@ -1,23 +1,27 @@
 """LLM tool calling"""
-from langchain_tavily import TavilySearch
+
 from typing import Literal, Optional, Union
+
+from langchain_tavily import TavilySearch
 
 from prazo.core.config import config
 
 
 def tavily_search_tool(
     max_results: int = 5,
-    topic: Literal['general', 'news'] = 'general',
+    topic: Literal["general", "news"] = "general",
     include_domains: list[str] = [],
     exclude_domains: list[str] = [],
     days: int = 7,
-    time_range: Optional[Literal['day', 'week', 'month', 'year', 'd', 'w', 'm', 'y']] = None,
+    time_range: Optional[
+        Literal["day", "week", "month", "year", "d", "w", "m", "y"]
+    ] = None,
     auto_parameters: bool = False,
-    search_depth: Literal['basic', 'advanced'] = 'basic',
+    search_depth: Literal["basic", "advanced"] = "basic",
     chunks_per_source: int = 3,
     include_images: bool = False,
     include_image_descriptions: bool = False,
-    include_answer: Union[bool, Literal['basic', 'advanced']] = False,
+    include_answer: Union[bool, Literal["basic", "advanced"]] = False,
     country: Optional[str] = None,
     timeout: int = 60,
     include_favicon: bool = False,

@@ -2,9 +2,7 @@ from enum import Enum
 
 from .parser_tools import (
     BaseParserTool,
-    BBCParserTool,
     NDTVProfitParserTool,
-    NYTimesParserTool,
 )
 
 
@@ -52,7 +50,7 @@ SOURCE_CONFIG_MAP = {
     # ),
     Source.NDTV_PROFIT: SourceConfig(
         source=Source.NDTV_PROFIT,
-        sitemap_url="https://www.ndtvprofit.com/sitemap/sitemap-daily-2025-10-19.xml", # TODO: Change to daily sitemap
+        sitemap_url="https://www.ndtvprofit.com/sitemap/sitemap-daily-2025-10-19.xml",  # TODO: Change to daily sitemap
         parser_tool=NDTVProfitParserTool,
         filter_kwargs={},
     ),

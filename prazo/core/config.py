@@ -26,6 +26,7 @@ class Config(BaseModel):
         if not self.TAVILY_API_KEY:
             raise ValueError("TAVILY_API_KEY environment variable is not set")
 
+
 class ProductionConfig(Config):
     """Production configuration settings for the news agent"""
 
