@@ -15,6 +15,10 @@ class SourceService:
                 print(f"Error fetching and parsing {source_config.source}: {e}")
         return urls_list
     
+    def process_urls(self, urls: list[str]) -> list[str]:
+        """Get Article content from urls. Can add this function in parser tools. """
+        pass
+    
 
 def main():
     source_service = SourceService()

@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import advertools as adv
 import pandas as pd
+from trafilatura import fetch_url, extract
 
 
 class BaseParserTool(ABC):
@@ -15,6 +16,11 @@ class BaseParserTool(ABC):
     def parse(self, **filter_kwargs) -> list[str]:
         url_df = adv.sitemap_to_df(self.sitemap_url)
         return url_df
+    
+    def extract_text(self, url: str) -> str:
+        html = fetch_url(url)
+        text = extract(html)
+        return text
     
 class BBCParserTool(BaseParserTool):
     def __init__(self, sitemap_url: str):
