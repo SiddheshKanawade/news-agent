@@ -1,8 +1,13 @@
+from langchain_core.tools import BaseTool
+
+
 from prazo.utils.parser.source_config import SOURCE_CONFIG_MAP, Source, SourceConfig
 from prazo.schemas.article import Article
 
-class SourceService:
+class SourceService(BaseTool):
     """Service for fetching and parsing sources"""
+    name: str = "fetch_and_parse_sources"
+    description: str = f"Service for fetching news articles from different news channels like BBC, NDTV Profit, NY Times etc. Tool ensures that the news articles are latest and not already processed."
 
     def __init__(
         self, source_config_map: dict[Source, SourceConfig] = SOURCE_CONFIG_MAP
@@ -18,3 +23,9 @@ class SourceService:
             except Exception as e:
                 print(f"Error fetching and parsing {source_config.source}: {e}")
         return articles
+    
+    def _run(self, **kwargs) -> list[Article]:
+        return self.fetch_and_parse()
+
+    def _arun(self, **kwargs) -> list[Article]:
+        return self.fetch_and_parse()

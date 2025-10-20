@@ -5,7 +5,7 @@ import advertools as adv
 import pandas as pd
 from trafilatura import extract, fetch_url
 
-from ..schemas.article import Article
+from prazo.schemas.article import Article
 
 
 class BaseParserTool(ABC):
