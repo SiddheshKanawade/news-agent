@@ -1,5 +1,5 @@
-from .source_config import SOURCE_CONFIG_MAP, Source, SourceConfig
-from ..schemas.article import Article
+from prazo.utils.parser.source_config import SOURCE_CONFIG_MAP, Source, SourceConfig
+from prazo.schemas.article import Article
 
 class SourceService:
     """Service for fetching and parsing sources"""
