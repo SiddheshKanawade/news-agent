@@ -1,3 +1,5 @@
+"""Initiate Reactive Agent"""
+
 from prazo.utils.source_service import SourceService
 
 
