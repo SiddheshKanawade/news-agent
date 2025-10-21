@@ -1,5 +1,5 @@
 from typing import Annotated, List, Optional, Sequence
-
+from datetime import datetime
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
 from pydantic import BaseModel, Field
@@ -76,3 +76,4 @@ class MainNewsAgentState(BaseModel):
     tool_call_count: int = Field(
         default=0, description="Tool call counter for rate limiting"
     )
+    today_date: str = Field(default=datetime.now().strftime("%Y-%m-%d"))

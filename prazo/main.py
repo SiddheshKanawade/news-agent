@@ -2,9 +2,11 @@
 
 import asyncio
 import json
-from typing import List, Literal
+from typing import Any, Dict, List, Literal
 
 import yaml
+from langchain_core.callbacks import BaseCallbackHandler
+from langfuse.langchain import CallbackHandler
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 from langgraph.types import Command
@@ -12,7 +14,8 @@ from langgraph.types import Command
 from prazo.core.config import config
 from prazo.schemas import MainNewsAgentState
 from prazo.utils.agent.reactive_agent import create_reactive_graph
-from prazo.utils.tools import tavily_search_tool
+from prazo.utils.tools import tavily_search_tool, wikipedia_search_tool, arxiv_search_tool
+from prazo.core.logger import ConsoleToolLogger, logger 
 
 
 # TODO: Load from YAML file
@@ -119,13 +122,24 @@ def create_news_worker_agent():
         days=2,
         search_depth="basic",
     )
-    tools = [tavily_tool]
+    wikipedia_tool = wikipedia_search_tool(
+        top_k_results=3,
+        doc_content_chars_max=4000,
+        lang="en",
+    )
+    arxiv_tool = arxiv_search_tool(
+        top_k_results=15,
+        doc_content_chars_max=4000,
+        load_max_docs=15,
+    )
+    tools = [tavily_tool, wikipedia_tool, arxiv_tool]
 
     system_prompt = """You are a news collection agent. Your task is to collect the latest news articles for the topic "{current_topic}" in the groups {current_groups}.
 
     You must collect {max_items_per_topic} unique news items for each topic. Sort them by relevance and recency.
 
     IMPORTANT: You do need any confirmation for anything.
+    Today's date is {today_date}.
 
 IMPORTANT: Only include news from the last {days_filter} days. Filter out any articles older than {days_filter} days from today's date. Use multiple search queries combining the topic with each group.
 
@@ -161,9 +175,10 @@ Search thoroughly using multiple queries and tools. Then provide a comprehensive
             "current_groups",
             "days_filter",
             "max_items_per_topic",
+            "today_date",
         ],
         aggregate_output=False,
-        max_tool_calls=10,
+        max_tool_calls=2,
         extracted_output_key="news_items",
         max_tokens=16000,
         extractor_prompt="""Extract news items from the following input text: {content}""",
@@ -190,12 +205,18 @@ def create_main_news_agent():
     return builder
 
 
+# Initialize callback handlers
+# Langfuse: Tracks everything in cloud dashboard (reads from env vars)
+langfuse_handler = CallbackHandler()
+# Console logger: Prints tool calls in real-time to terminal
+console_logger = ConsoleToolLogger()
+
 graph = (
     create_main_news_agent()
     .compile()
     .with_config(
         config={
-            "callbacks": [],
+            "callbacks": [langfuse_handler, console_logger],
             "checkpointer": MemorySaver(),
             "recursion_limit": 500,
         }

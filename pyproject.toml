@@ -21,6 +21,7 @@ dependencies = [
     "langchain-google-genai>=3.0.0",
     "langchain-openai>=1.0.0",
     "langchain-tavily>=0.2.12",
+    "langfuse>=3.0.0",
     "openai>=2.5.0",
     "pydantic>=2.12.3",
     "python-dotenv>=1.1.1",
