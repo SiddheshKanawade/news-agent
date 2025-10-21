@@ -14,7 +14,7 @@ class Config(BaseModel):
     GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY")
     DEEPSEEK_API_KEY: Optional[str] = os.getenv("DEEPSEEK_API_KEY")
     TAVILY_API_KEY: Optional[str] = os.getenv("TAVILY_API_KEY")
-    TOPICS_FILE: Optional[str] = 'prazo/core/topics.yaml'
+    TOPICS_FILE: Optional[str] = "prazo/core/topics.yaml"
 
     def validate_api_keys(self):
         """Validate that required API keys are set."""
