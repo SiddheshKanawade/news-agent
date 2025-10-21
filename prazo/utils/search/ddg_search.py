@@ -117,7 +117,9 @@ class DDGSearchTool(BaseTool):
                             return []
                     else:
                         # Non-rate-limit error, re-raise immediately
-                        logger.error(f"DuckDuckGo search error (non-rate-limit): {e}")
+                        logger.error(
+                            f"DuckDuckGo search error (non-rate-limit): {e}"
+                        )
                         raise e
 
         # If we get here, all retries failed due to rate limiting

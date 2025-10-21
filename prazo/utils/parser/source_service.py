@@ -1,12 +1,12 @@
 from langchain_core.tools import BaseTool
 
+from prazo.core.logger import logger
 from prazo.schemas.article import Article
 from prazo.utils.parser.source_config import (
     SOURCE_CONFIG_MAP,
     Source,
     SourceConfig,
 )
-from prazo.core.logger import logger
 
 
 class SourceService(BaseTool):
@@ -29,7 +29,9 @@ class SourceService(BaseTool):
                 articles = source_config.parse()
                 articles.extend(articles)
             except Exception as e:
-                logger.error(f"Error fetching and parsing {source_config.source}: {e}")
+                logger.error(
+                    f"Error fetching and parsing {source_config.source}: {e}"
+                )
         return articles
 
     def _run(self, **kwargs) -> list[Article]:
