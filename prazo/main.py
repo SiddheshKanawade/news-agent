@@ -1,6 +1,7 @@
 """Initiate Reactive Agent"""
 
 import asyncio
+import json
 from typing import List, Literal
 
 import yaml
@@ -99,6 +100,12 @@ def route_to_next_topic(
 
 def save_collections(state: MainNewsAgentState) -> MainNewsAgentState:
     """Save the collected news items to a file."""
+    with open(f"collections_{state.current_topic}.json", "w") as file:
+        json.dump(
+            [item.model_dump() for item in state.news_collections],
+            file,
+            indent=2,
+        )
     return {"current_step": "collections_saved"}
 
 
