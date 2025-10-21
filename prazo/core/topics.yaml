@@ -1,6 +1,19 @@
-AI, Gemini, Anthropic, OpenAI, GenAI, Alibaba, Agents, Nvidia, Llama, Qwen, Deepseek:
-  groups: ["Technology", "AI"]
-  news: []
+# AI, Gemini, Anthropic, OpenAI, GenAI, Alibaba, Agents, Nvidia, Llama, Qwen, Deepseek:
+#   groups: ["Technology", "AI"]
+#   tools: ["arxiv", "tavily", "wikipedia"] # Research + News + Context
+#   news: []
+
 Reinforcement Learning, Deep Learning, Machine Learning, Neural Networks, Transformers:
   groups: ["AI", "Technology"]
+  tools: ["arxiv", "tavily", "wikipedia"] # Heavy research topic - use all tools
+  news: []
+# Example: For generic news topics (uncomment and modify as needed)
+# US Politics, Elections:
+#   groups: ["Politics", "US"]
+#   tools: ["tavily", "wikipedia"] # Just news + context, no research papers
+#   news: []
+
+Apple, Google, Microsoft:
+  groups: ["Technology", "Companies"]
+  tools: ["tavily"] # Only latest news, no research or background needed
   news: []

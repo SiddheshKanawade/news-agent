@@ -19,6 +19,9 @@ class Config(BaseModel):
     LANGFUSE_HOST: Optional[str] = os.getenv(
         "LANGFUSE_HOST", "https://cloud.langfuse.com"
     )
+    REDDIT_CLIENT_ID: Optional[str] = os.getenv("REDDIT_CLIENT_ID")
+    REDDIT_CLIENT_SECRET: Optional[str] = os.getenv("REDDIT_CLIENT_SECRET")
+    REDDIT_USER_AGENT: Optional[str] = os.getenv("REDDIT_USER_AGENT")
     TOPICS_FILE: Optional[str] = "prazo/core/topics.yaml"
 
     def validate_api_keys(self):

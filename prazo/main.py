@@ -18,6 +18,7 @@ from prazo.utils.tools import (
     arxiv_search_tool,
     tavily_search_tool,
     wikipedia_search_tool,
+    reddit_search_tool,
 )
 
 
@@ -79,6 +80,52 @@ def route_to_next_topic(
         groups = topic_info.get("groups", [])
         days_filter = get_days_filter_for_groups(groups)
 
+        # Get preferred tools from YAML, or use defaults
+        preferred_tools = topic_info.get("tools", None)
+        
+        # If no tools specified in YAML, fall back to heuristic
+        if preferred_tools is None:
+            # Heuristic: mark research topics based on keywords in topic or groups
+            research_keywords = [
+                "research",
+                "paper",
+                "preprint",
+                "arxiv",
+                "arXiv",
+                "ml",
+                "ai",
+                "machine learning",
+                "deep learning",
+                "neural",
+                "transformer",
+                "nlp",
+                "cv",
+                "science",
+                "biology",
+                "physics",
+                "math",
+                "statistics",
+            ]
+            topic_l = topic_name.lower()
+            group_l = [g.lower() for g in groups]
+            is_research_topic = any(kw in topic_l for kw in research_keywords) or any(
+                kw in g for g in group_l for kw in [
+                    "ai",
+                    "ml",
+                    "science",
+                    "research",
+                    "academia",
+                ]
+            )
+            # Default tool selection based on heuristic
+            if is_research_topic:
+                preferred_tools = ["arxiv", "tavily", "wikipedia"]
+            else:
+                preferred_tools = ["tavily", "wikipedia"]
+        else:
+            # Determine is_research_topic based on whether arxiv is in preferred tools
+            is_research_topic = "arxiv" in preferred_tools
+
         if any(group.lower() in ["us", "india", "world"] for group in groups):
             groups += ["breaking news", "politics"]
         groups += ["recent events", "recent developments", "latest news"]
@@ -93,6 +140,8 @@ def route_to_next_topic(
                 "current_topic": topic_name,
                 "current_groups": groups,
                 "days_filter": days_filter,
+                "is_research_topic": is_research_topic,
+                "preferred_tools": preferred_tools,
                 "current_topic_index": state.current_topic_index + 1,
             }
         )
@@ -108,7 +157,7 @@ def save_collections(state: MainNewsAgentState) -> MainNewsAgentState:
     """Save the collected news items to a file."""
     with open(f"collections_{state.current_topic}.json", "w") as file:
         json.dump(
-            [item.model_dump() for item in state.news_collections],
+            [item.model_dump(mode='json') for item in state.news_collections],
             file,
             indent=2,
         )
@@ -135,38 +184,85 @@ def create_news_worker_agent():
         doc_content_chars_max=4000,
         load_max_docs=15,
     )
-    tools = [tavily_tool, wikipedia_tool, arxiv_tool]
+    
+    reddit_tool = reddit_search_tool()
+    # Order tools to encourage research-first where applicable
+    tools = [arxiv_tool, tavily_tool, wikipedia_tool, reddit_tool]
 
     system_prompt = """You are a news collection agent. Your task is to collect the latest news articles for the topic "{current_topic}" in the groups {current_groups}.
 
-    You must collect {max_items_per_topic} unique news items for each topic. Sort them by relevance and recency.
+You must collect {max_items_per_topic} unique news items for each topic. Sort them by relevance and recency.
 
-    IMPORTANT: You do need any confirmation for anything.
-    Today's date is {today_date}.
+IMPORTANT: You do NOT need any confirmation for anything. Act autonomously.
+Today's date is {today_date}.
 
-IMPORTANT: Only include news from the last {days_filter} days. Filter out any articles older than {days_filter} days from today's date. Use multiple search queries combining the topic with each group.
+IMPORTANT: Only include news from the last {days_filter} days. Filter out any articles older than {days_filter} days from today's date.
 
-If {current_topic} contains a comma separated list of topics, use each topic individually and in combination with the groups to create a list of search queries. you can also combine multiple topics together to optimize the search queries.
+=== MANDATORY TOOL USAGE STRATEGY ===
 
-Search queries to use:
-1. topic (after splitting by comma) + each group individually
-2. topic (after splitting by comma) + combinations of groups
-3. topic (after splitting by comma) + combinations of groups + combinations of topics
+For this topic, you MUST use these tools: {preferred_tools}
+
+Each available tool serves a specific purpose:
+
+**ArXiv Tool** (if available) - Use for research topics:
+   - Purpose: Find recent academic papers, preprints, and research developments
+   - Query format: Use technical keywords (e.g., "deep learning", "transformers", "reinforcement learning")
+   - Make MULTIPLE queries: Try 5-10 different keyword combinations
+   - Look for papers from the last {days_filter} days when possible
+   
+**Tavily Search Tool** (if available) - Use for news:
+   - Purpose: Recent news articles and web coverage from the last {days_filter} days
+   - Industry announcements, company news, product launches, breaking news
+   - Query format: Combine topic + "news", topic + "latest", topic + group keywords
+   - Make 5-10 queries with different combinations
+   
+**Wikipedia Tool** (if available) - Use for context:
+   - Purpose: Background context, definitions, understanding entities/concepts
+   - Clarifying acronyms, technical terms, historical context
+   - Query format: Search for key entities, concepts, or terms (2-3 queries)
+
+SEARCH STRATEGY:
+If {current_topic} contains multiple comma-separated topics, break them down and search for each individually.
+
+Create diverse search queries by:
+1. Each topic keyword individually (e.g., "Transformers", "Neural Networks")
+2. Topic keywords + group keywords (e.g., "Deep Learning AI", "Machine Learning Technology")
+3. Combinations of related topics (e.g., "Reinforcement Learning Deep Learning")
+4. Technical variations and synonyms
+
+Execute 12-15 different search queries across available tools to ensure comprehensive coverage.
+
+=== OUTPUT REQUIREMENTS ===
 
 After collecting search results, analyze and extract the most relevant and recent news items. For each news item, provide:
-** Output schema **
+
 - title: A concise title (max 15 words)
-- summary: A comprehensive summary (At least 1-2 paragraphs, 150-250 words.)
-- sources: List of Source URLs - retrieve the URL from the search results - each URL should be a valid URL
+- summary: A comprehensive summary (At least 1-2 paragraphs, 150-250 words)
+- sources: List of Source URLs from the search results - each URL must be valid
 - topic: {current_topic}
 - groups: {current_groups}
-- published_date: The date the news item was published
+- published_date: The publication date in ISO format (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS). Extract from search results if available.
+- tool_source: The tool that provided this news item (must be one of: "arxiv", "tavily", or "wikipedia")
+
+IMPORTANT: For tool_source, specify which tool you used to find each news item:
+- If from ArXiv search results → tool_source: "arxiv"
+- If from Tavily search results → tool_source: "tavily"
+- If from Wikipedia search results → tool_source: "wikipedia"
 
 Focus on unique, high-quality news items and avoid duplicates. Prioritize recent and authoritative sources."""
 
     user_prompt = """Please collect the latest news for the topic "{current_topic}" related to {current_groups}.
 
-Search thoroughly using multiple queries and tools. Then provide a comprehensive list of unique news items with proper summaries and source attribution."""
+IMPORTANT: You MUST use the specified tools: {preferred_tools}
+
+Search strategy based on available tools:
+- If Wikipedia is available: Start with 2-3 queries to understand key concepts and context
+- If ArXiv is available: Use 5-10 queries to find recent research papers and developments
+- If Tavily is available: Use 5-10 queries to find recent news articles and announcements
+
+Make 12-15 total tool calls using only the tools specified above. Analyze all results and synthesize a comprehensive list of unique news items with proper summaries and source attribution.
+
+Begin searching now."""
 
     return create_reactive_graph(
         prompt=user_prompt,
@@ -179,9 +275,11 @@ Search thoroughly using multiple queries and tools. Then provide a comprehensive
             "days_filter",
             "max_items_per_topic",
             "today_date",
+            "is_research_topic",
+            "preferred_tools",
         ],
         aggregate_output=False,
-        max_tool_calls=10,
+        max_tool_calls=15,
         extracted_output_key="news_items",
         max_tokens=16000,
         extractor_prompt="""Extract news items from the following input text: {content}""",

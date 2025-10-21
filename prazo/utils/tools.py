@@ -5,6 +5,9 @@ from typing import Literal, Optional, Union
 from langchain_community.tools import ArxivQueryRun, WikipediaQueryRun
 from langchain_community.utilities import ArxivAPIWrapper, WikipediaAPIWrapper
 from langchain_tavily import TavilySearch
+from langchain_community.utilities.reddit_search import RedditSearchAPIWrapper
+from langchain_community.tools.reddit_search.tool import RedditSearchRun
+
 
 from prazo.core.config import config
 from prazo.utils.search.ddg_search import DDGSearchTool
@@ -71,7 +74,15 @@ def arxiv_search_tool(
         load_max_docs=load_max_docs,
         continue_on_failure=True,
     )
-    return ArxivQueryRun(api_wrapper=api_wrapper)
+    return ArxivQueryRun(api_wrapper=api_wrapper)   
+
+def reddit_search_tool():
+    api_wrapper = RedditSearchAPIWrapper(
+        client_id=config.REDDIT_CLIENT_ID,
+        client_secret=config.REDDIT_CLIENT_SECRET,
+        user_agent=config.REDDIT_USER_AGENT,
+    )
+    return RedditSearchRun(api_wrapper=api_wrapper)
 
 
 def ddg_search_tool():

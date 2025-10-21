@@ -17,13 +17,16 @@ class NewsItem(BaseModel):
         description="List of URLs which point to this news",
         default_factory=list,
     )
-    published_date: Optional[str] = Field(
+    published_date: Optional[datetime] = Field(
         description="Publication date if available", default=None
     )
     topic: str = Field(description="The topic this news item belongs to")
     groups: List[str] = Field(
         description="The groups this news item is categorized under",
         default_factory=list,
+    )
+    tool_source: str = Field(
+        description="The tool used to find this news item (arxiv, tavily, or wikipedia)"
     )
 
 
@@ -78,3 +81,10 @@ class MainNewsAgentState(BaseModel):
         default=0, description="Tool call counter for rate limiting"
     )
     today_date: str = Field(default=datetime.now().strftime("%Y-%m-%d"))
+    is_research_topic: bool = Field(
+        default=False,
+        description="Whether the current topic is research-oriented (ML/AI/science, papers)")
+    preferred_tools: Optional[List[str]] = Field(
+        default=None,
+        description="List of tool names to use for current topic: ['arxiv', 'tavily', 'wikipedia']"
+    )
