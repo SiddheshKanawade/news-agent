@@ -80,8 +80,9 @@ def route_to_next_topic(
         groups = topic_info.get("groups", [])
         days_filter = get_days_filter_for_groups(groups)
 
-        # Get preferred tools from YAML, or use defaults
+        # Get preferred tools and subreddits from YAML, or use defaults
         preferred_tools = topic_info.get("tools", None)
+        subreddits = topic_info.get("subreddits", None)
         
         # If no tools specified in YAML, fall back to heuristic
         if preferred_tools is None:
@@ -142,6 +143,7 @@ def route_to_next_topic(
                 "days_filter": days_filter,
                 "is_research_topic": is_research_topic,
                 "preferred_tools": preferred_tools,
+                "subreddits": subreddits,
                 "current_topic_index": state.current_topic_index + 1,
             }
         )
@@ -221,6 +223,17 @@ Each available tool serves a specific purpose:
    - Clarifying acronyms, technical terms, historical context
    - Query format: Search for key entities, concepts, or terms (2-3 queries)
 
+**Reddit Tool** (if available) - Use for community discussions:
+   - Purpose: Find community discussions, opinions, real-world experiences, and trending topics from POSTS ONLY (not comments)
+   - IMPORTANT: When using Reddit, you MUST specify a subreddit from this list: {subreddits}
+   - Query format: Use the subreddit parameter with your search query
+   - Make 3-5 queries across different subreddits from the list - prefer using reddit for recent posts
+   - Sort by "new" or "hot" to find recent discussions
+   - ALWAYS use time_filter: "day" to get only posts from the last 24 hours
+   - Reddit tool returns POSTS (submissions) only - extract information from post titles and content, NOT from comments
+   - LIMIT should be 25 for each query
+   - Example query params: {{"query": "your search term", "subreddit": "MachineLearning", "sort": "new", "time_filter": "day", "limit": "25"}}
+
 SEARCH STRATEGY:
 If {current_topic} contains multiple comma-separated topics, break them down and search for each individually.
 
@@ -242,12 +255,13 @@ After collecting search results, analyze and extract the most relevant and recen
 - topic: {current_topic}
 - groups: {current_groups}
 - published_date: The publication date in ISO format (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS). Extract from search results if available.
-- tool_source: The tool that provided this news item (must be one of: "arxiv", "tavily", or "wikipedia")
+- tool_source: The tool that provided this news item (must be one of: "arxiv", "tavily", "wikipedia", or "reddit")
 
 IMPORTANT: For tool_source, specify which tool you used to find each news item:
 - If from ArXiv search results → tool_source: "arxiv"
 - If from Tavily search results → tool_source: "tavily"
 - If from Wikipedia search results → tool_source: "wikipedia"
+- If from Reddit search results → tool_source: "reddit"
 
 Focus on unique, high-quality news items and avoid duplicates. Prioritize recent and authoritative sources."""
 
@@ -259,6 +273,8 @@ Search strategy based on available tools:
 - If Wikipedia is available: Start with 2-3 queries to understand key concepts and context
 - If ArXiv is available: Use 5-10 queries to find recent research papers and developments
 - If Tavily is available: Use 5-10 queries to find recent news articles and announcements
+- If Reddit is available: Use 3-5 queries across the specified subreddits: {subreddits}
+  IMPORTANT: When calling Reddit tool, always include the "subreddit" parameter from the list above
 
 Make 12-15 total tool calls using only the tools specified above. Analyze all results and synthesize a comprehensive list of unique news items with proper summaries and source attribution.
 
@@ -277,6 +293,7 @@ Begin searching now."""
             "today_date",
             "is_research_topic",
             "preferred_tools",
+            "subreddits",
         ],
         aggregate_output=False,
         max_tool_calls=15,
