@@ -4,11 +4,13 @@ from typing import Literal, Optional, Union
 
 from langchain_community.tools import (
     WikipediaQueryRun,
+    ArxivQueryRun
 )
-from langchain_community.utilities.wikipedia import WikipediaAPIWrapper
+from langchain_community.utilities import WikipediaAPIWrapper, ArxivAPIWrapper
 from langchain_tavily import TavilySearch
 
 from prazo.core.config import config
+from prazo.utils.search.ddg_search import DDGSearchTool
 
 
 def tavily_search_tool(
@@ -59,3 +61,17 @@ def wikipedia_search_tool(
         lang=lang,
     )
     return WikipediaQueryRun(api_wrapper=api_wrapper)
+ 
+def arxiv_search_tool(
+    top_k_results: int = 3, doc_content_chars_max: int = 4000, load_max_docs: int = 5
+):
+    api_wrapper=ArxivAPIWrapper(
+            top_k_results=top_k_results,
+            doc_content_chars_max=doc_content_chars_max,
+            load_max_docs=load_max_docs,
+            continue_on_failure=True,
+        )
+    return ArxivQueryRun(api_wrapper=api_wrapper)
+
+def ddg_search_tool():
+    return DDGSearchTool()

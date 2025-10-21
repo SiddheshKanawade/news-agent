@@ -1,0 +1,6 @@
+AI, Gemini, Anthropic, OpenAI, GenAI, Alibaba, Agents, Nvidia, Llama, Qwen, Deepseek:
+  groups: ["Technology", "AI"]
+  news: []
+Reinforcement Learning, Deep Learning, Machine Learning, Neural Networks, Transformers:
+  groups: ["AI", "Technology"]
+  news: []

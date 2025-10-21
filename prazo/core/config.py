@@ -14,6 +14,7 @@ class Config(BaseModel):
     GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY")
     DEEPSEEK_API_KEY: Optional[str] = os.getenv("DEEPSEEK_API_KEY")
     TAVILY_API_KEY: Optional[str] = os.getenv("TAVILY_API_KEY")
+    TOPICS_FILE: Optional[str] = 'prazo/core/topics.yaml'
 
     def validate_api_keys(self):
         """Validate that required API keys are set."""
@@ -25,6 +26,11 @@ class Config(BaseModel):
             raise ValueError("DEEPSEEK_API_KEY environment variable is not set")
         if not self.TAVILY_API_KEY:
             raise ValueError("TAVILY_API_KEY environment variable is not set")
+
+    def validate_topics_file(self):
+        """Validate that the topics file exists."""
+        if not os.path.exists(self.TOPICS_FILE):
+            raise ValueError(f"Topics file {self.TOPICS_FILE} does not exist")
 
 
 class ProductionConfig(Config):
@@ -52,3 +58,4 @@ def get_config():
 # Global config instance
 config: Config = get_config()
 config.validate_api_keys()
+config.validate_topics_file()
