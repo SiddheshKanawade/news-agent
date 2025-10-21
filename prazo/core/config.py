@@ -16,7 +16,9 @@ class Config(BaseModel):
     TAVILY_API_KEY: Optional[str] = os.getenv("TAVILY_API_KEY")
     LANGFUSE_PUBLIC_KEY: Optional[str] = os.getenv("LANGFUSE_PUBLIC_KEY")
     LANGFUSE_SECRET_KEY: Optional[str] = os.getenv("LANGFUSE_SECRET_KEY")
-    LANGFUSE_HOST: Optional[str] = os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com")
+    LANGFUSE_HOST: Optional[str] = os.getenv(
+        "LANGFUSE_HOST", "https://cloud.langfuse.com"
+    )
     TOPICS_FILE: Optional[str] = "prazo/core/topics.yaml"
 
     def validate_api_keys(self):
@@ -30,9 +32,13 @@ class Config(BaseModel):
         if not self.TAVILY_API_KEY:
             raise ValueError("TAVILY_API_KEY environment variable is not set")
         if not self.LANGFUSE_PUBLIC_KEY:
-            raise ValueError("LANGFUSE_PUBLIC_KEY environment variable is not set")
+            raise ValueError(
+                "LANGFUSE_PUBLIC_KEY environment variable is not set"
+            )
         if not self.LANGFUSE_SECRET_KEY:
-            raise ValueError("LANGFUSE_SECRET_KEY environment variable is not set")
+            raise ValueError(
+                "LANGFUSE_SECRET_KEY environment variable is not set"
+            )
 
     def validate_topics_file(self):
         """Validate that the topics file exists."""

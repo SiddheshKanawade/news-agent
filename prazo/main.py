@@ -2,20 +2,23 @@
 
 import asyncio
 import json
-from typing import Any, Dict, List, Literal
+from typing import List, Literal
 
 import yaml
-from langchain_core.callbacks import BaseCallbackHandler
 from langfuse.langchain import CallbackHandler
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 from langgraph.types import Command
 
 from prazo.core.config import config
+from prazo.core.logger import ConsoleToolLogger
 from prazo.schemas import MainNewsAgentState
 from prazo.utils.agent.reactive_agent import create_reactive_graph
-from prazo.utils.tools import tavily_search_tool, wikipedia_search_tool, arxiv_search_tool
-from prazo.core.logger import ConsoleToolLogger, logger 
+from prazo.utils.tools import (
+    arxiv_search_tool,
+    tavily_search_tool,
+    wikipedia_search_tool,
+)
 
 
 # TODO: Load from YAML file
