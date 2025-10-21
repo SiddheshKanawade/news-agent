@@ -11,7 +11,7 @@ from langgraph.graph import END, StateGraph
 from langgraph.types import Command
 
 from prazo.core.config import config
-from prazo.core.logger import ConsoleToolLogger
+from prazo.core.logger import ConsoleToolLogger, logger
 from prazo.schemas import MainNewsAgentState
 from prazo.utils.agent.reactive_agent import create_reactive_graph
 from prazo.utils.tools import (
@@ -48,7 +48,7 @@ def load_topics_data(state: MainNewsAgentState) -> MainNewsAgentState:
             "current_step": "topics_loaded",
         }
     except Exception as e:
-        print(f"Error loading topics data: {e}")
+        logger.error(f"Error loading topics data: {e}")
         return {
             "current_step": "topics_loading_failed",
         }
@@ -83,7 +83,7 @@ def route_to_next_topic(
             groups += ["breaking news", "politics"]
         groups += ["recent events", "recent developments", "latest news"]
 
-        print(
+        logger.info(
             f"Processing topic {state.current_topic_index + 1}/{len(state.topic_list)}: {topic_name}"
         )
 
@@ -99,7 +99,7 @@ def route_to_next_topic(
 
         return Command(goto="process_topic", update=updates)
     else:
-        print("All topics processed, saving collections")
+        logger.info("All topics processed, saving collections")
         updates.update({"current_step": "all_topics_processed"})
         return Command(goto="deduplicate_collections", update=updates)
 
@@ -181,7 +181,7 @@ Search thoroughly using multiple queries and tools. Then provide a comprehensive
             "today_date",
         ],
         aggregate_output=False,
-        max_tool_calls=2,
+        max_tool_calls=10,
         extracted_output_key="news_items",
         max_tokens=16000,
         extractor_prompt="""Extract news items from the following input text: {content}""",
@@ -230,7 +230,7 @@ graph = (
 async def run_graph():
     initial_state = {"messages": []}
     result = await graph.ainvoke(initial_state)
-    print(result)
+    logger.info(result)
 
 
 # Run the asynchronous function

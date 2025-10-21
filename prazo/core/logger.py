@@ -22,8 +22,8 @@ class ConsoleToolLogger(BaseCallbackHandler):
     ) -> None:
         """Print when a tool is being called."""
         tool_name = serialized.get("name", "Unknown Tool")
-        print(f"\n🔧 Tool Called: {tool_name}")
-        print(
+        logger.info(f"🔧 Tool Called: {tool_name}")
+        logger.info(
             f"   Input: {input_str[:150]}{'...' if len(input_str) > 150 else ''}"
         )
 
@@ -34,7 +34,7 @@ class ConsoleToolLogger(BaseCallbackHandler):
     ) -> None:
         """Print when a tool call completes."""
         output_str = str(output)
-        print(
+        logger.info(
             f"✅ Tool Completed - Output length: {len(output_str)} characters"
         )
 
@@ -44,4 +44,4 @@ class ConsoleToolLogger(BaseCallbackHandler):
         **kwargs: Any,
     ) -> None:
         """Print when a tool call errors."""
-        print(f"❌ Tool Error: {str(error)}")
+        logger.error(f"❌ Tool Error: {str(error)}")

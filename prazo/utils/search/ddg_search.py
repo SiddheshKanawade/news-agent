@@ -5,6 +5,8 @@ import time
 from duckduckgo_search import DDGS
 from langchain_core.tools import BaseTool
 
+from prazo.core.logger import logger
+
 _ddg_search_lock = threading.Lock()
 _last_ddg_request_time = 0
 _ddg_base_delay = 15.0
@@ -53,13 +55,13 @@ class DDGSearchTool(BaseTool):
 
                 if time_since_last < current_delay:
                     sleep_time = current_delay - time_since_last
-                    print(
+                    logger.info(
                         f"DuckDuckGo rate limiting: waiting {sleep_time:.1f} seconds (attempt {attempt + 1}/{_ddg_max_retries})..."
                     )
                     time.sleep(sleep_time)
 
                 try:
-                    print(
+                    logger.info(
                         f"DuckDuckGo search: attempting query '{query}' (attempt {attempt + 1}/{_ddg_max_retries})"
                     )
                     res = DDGS(
@@ -79,13 +81,13 @@ class DDGSearchTool(BaseTool):
                                 "DuckDuckGo rate limit detected in response"
                             )
 
-                    print(
+                    logger.info(
                         f"DuckDuckGo search successful: found {len(res)} results"
                     )
                     return res
 
                 except Exception as e:
-                    print(f"Error occured in DDG: {e}")
+                    logger.error(f"Error occured in DDG: {e}")
                     _last_ddg_request_time = time.time()
                     error_msg = str(e).lower()
 
@@ -102,24 +104,24 @@ class DDGSearchTool(BaseTool):
                         if attempt < _ddg_max_retries - 1:
                             # Exponential backoff for rate limit errors
                             backoff_time = (2**attempt) * 5  # 5, 10, 20 seconds
-                            print(
+                            logger.info(
                                 f"DuckDuckGo rate limit error detected. Backing off for {backoff_time} seconds..."
                             )
                             time.sleep(backoff_time)
                             continue
                         else:
-                            print(
+                            logger.info(
                                 f"DuckDuckGo: Max retries exceeded due to rate limiting. Error: {e}"
                             )
                             # Return empty results instead of crashing
                             return []
                     else:
                         # Non-rate-limit error, re-raise immediately
-                        print(f"DuckDuckGo search error (non-rate-limit): {e}")
+                        logger.error(f"DuckDuckGo search error (non-rate-limit): {e}")
                         raise e
 
         # If we get here, all retries failed due to rate limiting
-        print(
+        logger.error(
             "DuckDuckGo: All retry attempts failed due to rate limiting. Returning empty results."
         )
         return []
