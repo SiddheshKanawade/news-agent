@@ -5,3 +5,9 @@ format:
 
 run:
 	uv run python -m prazo.main
+
+service:
+	frontend/api.py
+
+frontend:
+	cd frontend && python -m http.server 3000

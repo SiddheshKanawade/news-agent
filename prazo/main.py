@@ -274,7 +274,13 @@ Execute 12-15 different search queries across available tools to ensure comprehe
 
 After collecting search results, analyze and extract the most relevant and recent news items. For each news item, provide:
 
-- title: A concise title (max 15 words)
+- title: **IMPORTANT: Use the EXACT original title from the source article/paper.** 
+  * For ArXiv papers: Use the exact paper title as provided by ArXiv
+  * For news articles: Use the exact article headline
+  * For Reddit posts: Use the exact post title
+  * For Wikipedia: Use the exact page title
+  * DO NOT modify, shorten, or rephrase the original title
+  * Only create a custom title if you are merging information from multiple sources
 - summary: A comprehensive summary (At least 1-2 paragraphs, 150-250 words)
 - sources: List of Source URLs from the search results - each URL must be valid
 - topic: List containing the topic(s) this news relates to. For a single topic use: ["{current_topic}"]
@@ -304,6 +310,12 @@ Search strategy based on available tools:
 
 Make 12-15 total tool calls using only the tools specified above. Analyze all results and synthesize a comprehensive list of unique news items with proper summaries and source attribution.
 
+**CRITICAL REMINDER**: When creating news items, use the EXACT original title from each source:
+- ArXiv papers: Use the exact paper title (do not shorten or modify)
+- News articles: Use the exact headline (preserve all words)
+- Reddit posts: Use the exact post title
+- Wikipedia: Use the exact page title
+
 Begin searching now."""
 
     return create_reactive_graph(
@@ -322,7 +334,7 @@ Begin searching now."""
             "subreddits",
         ],
         aggregate_output=False,
-        max_tool_calls=15,  # Max tool calls for each topic
+        max_tool_calls=25,  # Max tool calls for each topic
         extracted_output_key="news_items",
         max_tokens=16000,
         extractor_prompt="""Extract news items from the following input text: {content}""",

@@ -11,8 +11,8 @@ from prazo.core.config import config
 class NewsItem(BaseModel):
     """Structure for individual news item."""
 
-    title: str = Field(description="News title (max 15 words)")
-    summary: str = Field(description="News summary (max 1-2 paragraphs)")
+    title: str = Field(description="Exact title from the original source (article, paper, or post)")
+    summary: str = Field(description="News summary (1-2 paragraphs, 150-250 words)")
     sources: List[str] = Field(
         description="List of URLs which point to this news",
         default_factory=list,

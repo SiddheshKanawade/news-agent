@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Agent - Latest News</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📰 News Agent</h1>
+            <p class="subtitle">Your AI-Powered News Aggregator</p>
+        </header>
+
+        <div class="filters">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search news..." />
+            </div>
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="arxiv">ArXiv</button>
+                <button class="filter-btn" data-filter="tavily">Tavily</button>
+                <button class="filter-btn" data-filter="wikipedia">Wikipedia</button>
+                <button class="filter-btn" data-filter="reddit">Reddit</button>
+            </div>
+            <button id="refreshBtn" class="refresh-btn">🔄 Refresh</button>
+        </div>
+
+        <div id="loading" class="loading">Loading news items...</div>
+        <div id="error" class="error" style="display: none;"></div>
+        <div id="stats" class="stats"></div>
+        
+        <div id="newsContainer" class="news-container"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
