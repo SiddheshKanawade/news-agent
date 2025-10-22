@@ -5,8 +5,8 @@
 
 Reinforcement Learning, Deep Learning, Machine Learning, Neural Networks, Transformers:
   groups: ["AI", "Technology"]
-  tools: ["arxiv"] # Heavy research topic - use all tools
-  # subreddits: ["reinforcementlearning"]
+  tools: ["arxiv", "tavily", "reddit"] # Heavy research topic - use all tools
+  subreddits: ["reinforcementlearning"]
   news: []
 # Example: For generic news topics
 # US Politics, Elections:

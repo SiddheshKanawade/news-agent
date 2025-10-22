@@ -256,16 +256,17 @@ After collecting search results, analyze and extract the most relevant and recen
 - title: A concise title (max 15 words)
 - summary: A comprehensive summary (At least 1-2 paragraphs, 150-250 words)
 - sources: List of Source URLs from the search results - each URL must be valid
-- topic: {current_topic}
+- topic: List containing the topic(s) this news relates to. For a single topic use: ["{current_topic}"]
 - groups: {current_groups}
 - published_date: The publication date in ISO format (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS). Extract from search results if available.
-- tool_source: The tool that provided this news item (must be one of: "arxiv", "tavily", "wikipedia", or "reddit")
+- tool_source: List containing the tool(s) that provided this news item. Each tool must be one of: "arxiv", "tavily", "wikipedia", or "reddit"
 
-IMPORTANT: For tool_source, specify which tool you used to find each news item:
-- If from ArXiv search results → tool_source: "arxiv"
-- If from Tavily search results → tool_source: "tavily"
-- If from Wikipedia search results → tool_source: "wikipedia"
-- If from Reddit search results → tool_source: "reddit"
+IMPORTANT: For tool_source, specify which tool(s) you used to find each news item as a list:
+- If from ArXiv search results → tool_source: ["arxiv"]
+- If from Tavily search results → tool_source: ["tavily"]
+- If from Wikipedia search results → tool_source: ["wikipedia"]
+- If from Reddit search results → tool_source: ["reddit"]
+- If from multiple sources → tool_source: ["arxiv", "tavily"] (combine as appropriate)
 
 Focus on unique, high-quality news items and avoid duplicates. Prioritize recent and authoritative sources."""
 

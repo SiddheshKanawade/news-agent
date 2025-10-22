@@ -103,8 +103,14 @@ def merge_two_articles(article1: NewsItem, article2: NewsItem) -> NewsItem:
 
         # Combine sources from both items and remove duplicates
         all_sources = list(set(article1.sources + article2.sources))
+        
+        # Combine topics and tool_sources from both items and remove duplicates
+        all_topics = list(set(article1.topic + article2.topic))
+        all_tool_sources = list(set(article1.tool_source + article2.tool_source))
 
-        # Use the first item's topic and groups (they should be the same for duplicates)
+        # Combine groups (they should be similar for duplicates)
+        all_groups = list(set(article1.groups + article2.groups))
+
         return NewsItem(
             title=merged_title
             or f"{article1.title} / {article2.title}"[:100],  # Fallback
@@ -120,13 +126,9 @@ def merge_two_articles(article1: NewsItem, article2: NewsItem) -> NewsItem:
                 if any([article1.published_date, article2.published_date])
                 else None
             ),
-            topic=article1.topic,
-            groups=article1.groups,
-            tool_source=(
-                ",".join([article1.tool_source, article2.tool_source])
-                if article1.tool_source and article2.tool_source
-                else article1.tool_source or article2.tool_source
-            ),
+            topic=all_topics,
+            groups=all_groups,
+            tool_source=all_tool_sources,
         )
     except Exception as e:
         logger.warning(
@@ -138,13 +140,9 @@ def merge_two_articles(article1: NewsItem, article2: NewsItem) -> NewsItem:
             summary=f"{article1.summary}\n\n{article2.summary}",
             sources=list(set(article1.sources + article2.sources)),
             published_date=article1.published_date or article2.published_date,
-            topic=article1.topic,
-            groups=article1.groups,
-            tool_source=(
-                ",".join([article1.tool_source, article2.tool_source])
-                if article1.tool_source and article2.tool_source
-                else article1.tool_source or article2.tool_source
-            ),
+            topic=list(set(article1.topic + article2.topic)),
+            groups=list(set(article1.groups + article2.groups)),
+            tool_source=list(set(article1.tool_source + article2.tool_source)),
         )
 
 

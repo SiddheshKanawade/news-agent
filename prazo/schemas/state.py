@@ -20,13 +20,17 @@ class NewsItem(BaseModel):
     published_date: Optional[datetime] = Field(
         description="Publication date if available", default=None
     )
-    topic: str = Field(description="The topic this news item belongs to")
+    topic: List[str] = Field(
+        description="The topics this news item belongs to",
+        default_factory=list,
+    )
     groups: List[str] = Field(
         description="The groups this news item is categorized under",
         default_factory=list,
     )
-    tool_source: str = Field(
-        description="The tool used to find this news item (arxiv, tavily, wikipedia, or reddit)"
+    tool_source: List[str] = Field(
+        description="The tools used to find this news item (arxiv, tavily, wikipedia, or reddit)",
+        default_factory=list,
     )
 
 
