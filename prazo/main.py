@@ -300,7 +300,7 @@ Begin searching now."""
             "subreddits",
         ],
         aggregate_output=False,
-        max_tool_calls=15, # Max tool calls for each topic
+        max_tool_calls=15,  # Max tool calls for each topic
         extracted_output_key="news_items",
         max_tokens=16000,
         extractor_prompt="""Extract news items from the following input text: {content}""",
@@ -348,7 +348,7 @@ graph = (
 
 async def run_graph():
     initial_state = {"messages": []}
-    result = await graph.ainvoke(initial_state)
+    await graph.ainvoke(initial_state)
     # logger.info(result)
 
 

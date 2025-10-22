@@ -103,9 +103,7 @@ class DDGSearchTool(BaseTool):
                     ):
                         if attempt < _ddg_max_retries - 1:
                             # Exponential backoff for rate limit errors
-                            backoff_time = (
-                                2**attempt
-                            ) * 5  # 5, 10, 20 seconds
+                            backoff_time = (2**attempt) * 5  # 5, 10, 20 seconds
                             logger.info(
                                 f"DuckDuckGo rate limit error detected. Backing off for {backoff_time} seconds..."
                             )
