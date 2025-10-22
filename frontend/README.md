@@ -12,6 +12,7 @@ A simple, clean frontend for displaying news items collected by the News Agent.
 - 📊 Stats display showing number of items
 - ⏱️ Sorted by publication date (most recent first)
 - ∞ Infinite scroll - loads 50 items at a time for better performance
+- 🎯 Smart deduplication - ensures unique news items based on source URLs
 
 ## Setup & Usage
 
@@ -73,12 +74,15 @@ frontend/
 
 ## API Endpoints
 
-- `GET /api/news` - Get paginated news items (supports `?limit=50&offset=0`)
+- `GET /api/news` - Get paginated news items (supports `?limit=50&offset=0&reset=false`)
   - Returns items sorted by publication date (most recent first)
+  - Automatically deduplicates based on source URLs
   - Default limit: 50 items per request
   - Max limit: 100 items per request
+  - Use `reset=true` to clear the deduplication cache (done automatically on page load)
 - `GET /api/news/stats` - Get statistics about the collection
-- `GET /api/health` - Health check endpoint
+- `GET /api/health` - Health check endpoint (includes cache size)
+- `POST /api/news/clear-cache` - Manually clear the deduplication cache
 
 ## Configuration
 
@@ -108,6 +112,13 @@ Each news card displays:
 
 ### Infinite Scroll
 The frontend loads only 50 articles initially for fast page load. As you scroll down, it automatically loads more articles in batches of 50. This provides a smooth browsing experience even with thousands of news items.
+
+### Smart Deduplication
+The API automatically filters out duplicate news items based on source URLs:
+- If two news items share any source URL, only the most recent one is shown
+- Deduplication works across all pagination requests
+- Cache is automatically reset when you refresh the page or use the refresh button
+- This ensures you see only unique, high-quality news items
 
 ## Browser Compatibility
 

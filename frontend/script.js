@@ -89,7 +89,9 @@ async function loadNewsItems(isInitialLoad = false) {
     }
 
     try {
-        const url = `${API_URL}?limit=${ITEMS_PER_PAGE}&offset=${currentOffset}`;
+        // Add reset parameter for initial load to clear the deduplication cache
+        const resetParam = isInitialLoad ? '&reset=true' : '';
+        const url = `${API_URL}?limit=${ITEMS_PER_PAGE}&offset=${currentOffset}${resetParam}`;
         const response = await fetch(url);
 
         if (!response.ok) {
