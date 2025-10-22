@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List
 
 import numpy as np
@@ -110,6 +111,9 @@ def merge_two_articles(article1: NewsItem, article2: NewsItem) -> NewsItem:
 
         # Combine groups (they should be similar for duplicates)
         all_groups = list(set(article1.groups + article2.groups))
+        
+        # Use the earlier created_at timestamp (when content was originally created)
+        earliest_created_at = min(article1.created_at, article2.created_at)
 
         return NewsItem(
             title=merged_title
@@ -129,12 +133,17 @@ def merge_two_articles(article1: NewsItem, article2: NewsItem) -> NewsItem:
             topic=all_topics,
             groups=all_groups,
             tool_source=all_tool_sources,
+            created_at=earliest_created_at,
+            updated_at=datetime.now(),  # Set to now since we're merging/updating
         )
     except Exception as e:
         logger.warning(
             f"Error merging news items with LLM: {e}. Using simple merge."
         )
         # Fallback: simple merge
+        # Use the earlier created_at timestamp
+        earliest_created_at = min(article1.created_at, article2.created_at)
+        
         return NewsItem(
             title=f"{article1.title} / {article2.title}"[:100],
             summary=f"{article1.summary}\n\n{article2.summary}",
@@ -143,6 +152,8 @@ def merge_two_articles(article1: NewsItem, article2: NewsItem) -> NewsItem:
             topic=list(set(article1.topic + article2.topic)),
             groups=list(set(article1.groups + article2.groups)),
             tool_source=list(set(article1.tool_source + article2.tool_source)),
+            created_at=earliest_created_at,
+            updated_at=datetime.now(),  # Set to now since we're merging/updating
         )
 
 

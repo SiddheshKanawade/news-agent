@@ -9,6 +9,7 @@ from langchain_community.utilities.reddit_search import RedditSearchAPIWrapper
 from langchain_tavily import TavilySearch
 
 from prazo.core.config import config
+from prazo.utils.db import DatabaseCheckRun, DatabaseAPIWrapper
 from prazo.utils.search.ddg_search import DDGSearchTool
 
 
@@ -87,3 +88,17 @@ def reddit_search_tool():
 
 def ddg_search_tool():
     return DDGSearchTool()
+
+
+def database_check_tool():
+    """
+    Create a database URL check tool.
+    
+    This tool checks if URLs already exist in the database to avoid duplicate processing.
+    Use this before processing news items to verify which URLs are already in the database.
+    
+    Returns:
+        DatabaseCheckRun: Tool instance for checking URL existence
+    """
+    api_wrapper = DatabaseAPIWrapper()
+    return DatabaseCheckRun(api_wrapper=api_wrapper)

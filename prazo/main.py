@@ -1,7 +1,6 @@
 """Initiate Reactive Agent"""
 
 import asyncio
-import json
 from typing import List, Literal
 
 import yaml
@@ -17,6 +16,7 @@ from prazo.utils.agent.reactive_agent import create_reactive_graph
 from prazo.utils.deduplication import deduplicate
 from prazo.utils.tools import (
     arxiv_search_tool,
+    database_check_tool,
     reddit_search_tool,
     tavily_search_tool,
     wikipedia_search_tool,
@@ -161,13 +161,13 @@ def route_to_next_topic(
 
 
 def save_collections(state: MainNewsAgentState) -> MainNewsAgentState:
-    """Save the collected news items to a file."""
-    with open(f"collections_{state.current_topic}.json", "w") as file:
-        json.dump(
-            [item.model_dump(mode="json") for item in state.news_collections],
-            file,
-            indent=2,
-        )
+    """Save the collected news items to database."""
+    from prazo.core.db import save_news_items
+    
+    # Save to MongoDB
+    saved_count = save_news_items(state.news_collections)
+    logger.info(f"Saved {saved_count} news items to database")
+    
     return {"current_step": "collections_saved"}
 
 
@@ -192,8 +192,10 @@ def create_news_worker_agent():
         load_max_docs=15,
     )
     reddit_tool = reddit_search_tool()
+    db_check_tool = database_check_tool()
+    
     # Order tools to encourage research-first where applicable
-    tools = [arxiv_tool, tavily_tool, wikipedia_tool, reddit_tool]
+    tools = [db_check_tool, arxiv_tool, tavily_tool, wikipedia_tool, reddit_tool]
 
     system_prompt = """You are a news collection agent. Your task is to collect the latest news articles for the topic "{current_topic}" in the groups {current_groups}.
 
@@ -204,11 +206,30 @@ Today's date is {today_date}.
 
 IMPORTANT: Only include news from the last {days_filter} days. Filter out any articles older than {days_filter} days from today's date.
 
+=== DATABASE DEDUPLICATION ===
+
+**CRITICAL FIRST STEP**: Before processing any news items, you MUST use the database_url_check tool to verify which URLs are already in the database.
+
+1. After gathering search results from other tools, extract ALL URLs from the results
+2. Call database_url_check with comma-separated URLs (e.g., "url1, url2, url3")
+3. The tool will return:
+   - Existing URLs: Already processed (SKIP THESE)
+   - New URLs: Not in database (ONLY PROCESS THESE)
+4. Only create news items for articles with "New URLs"
+
+This prevents duplicate work and ensures we only add new content to the database.
+
 === MANDATORY TOOL USAGE STRATEGY ===
 
 For this topic, you MUST use these tools: {preferred_tools}
 
 Each available tool serves a specific purpose:
+
+**Database Check Tool** - ALWAYS USE FIRST:
+   - Tool name: database_url_check
+   - Purpose: Check if URLs are already processed to avoid duplicates
+   - When: After collecting URLs from search results, before creating news items
+   - Usage: Provide comma-separated URLs (e.g., "https://example.com/1, https://example.com/2")
 
 **ArXiv Tool** (if available) - Use for research topics:
    - Purpose: Find recent academic papers, preprints, and research developments
@@ -348,6 +369,10 @@ graph = (
 
 
 async def run_graph():
+    # Initialize database (create indexes)
+    from prazo.core.db import initialize_database
+    initialize_database()
+    
     initial_state = {"messages": []}
     await graph.ainvoke(initial_state)
     # logger.info(result)
