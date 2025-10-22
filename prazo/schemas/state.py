@@ -32,6 +32,14 @@ class NewsItem(BaseModel):
         description="The tools used to find this news item (arxiv, tavily, wikipedia, or reddit)",
         default_factory=list,
     )
+    created_at: datetime = Field(
+        description="Timestamp when the news item was created",
+        default_factory=datetime.now,
+    )
+    updated_at: datetime = Field(
+        description="Timestamp when the news item was last updated",
+        default_factory=datetime.now,
+    )
 
 
 class NewsCollectionOutput(BaseModel):
