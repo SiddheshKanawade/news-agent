@@ -83,12 +83,13 @@ class MainNewsAgentState(BaseModel):
     today_date: str = Field(default=datetime.now().strftime("%Y-%m-%d"))
     is_research_topic: bool = Field(
         default=False,
-        description="Whether the current topic is research-oriented (ML/AI/science, papers)")
+        description="Whether the current topic is research-oriented (ML/AI/science, papers)",
+    )
     preferred_tools: Optional[List[str]] = Field(
         default=None,
-        description="List of tool names to use for current topic: ['arxiv', 'tavily', 'wikipedia', 'reddit']"
+        description="List of tool names to use for current topic: ['arxiv', 'tavily', 'wikipedia', 'reddit']",
     )
     subreddits: Optional[List[str]] = Field(
         default=None,
-        description="List of subreddit names to search when using reddit tool (e.g., ['MachineLearning', 'artificial'])"
+        description="List of subreddit names to search when using reddit tool (e.g., ['MachineLearning', 'artificial'])",
     )

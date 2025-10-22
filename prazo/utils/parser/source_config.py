@@ -1,9 +1,6 @@
 from enum import Enum
 
-from .parser_tools import (
-    BaseParserTool,
-    NDTVProfitParserTool,
-)
+from .parser_tools import BaseParserTool, NDTVProfitParserTool
 
 
 class Source(Enum):

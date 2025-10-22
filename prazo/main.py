@@ -16,9 +16,9 @@ from prazo.schemas import MainNewsAgentState
 from prazo.utils.agent.reactive_agent import create_reactive_graph
 from prazo.utils.tools import (
     arxiv_search_tool,
+    reddit_search_tool,
     tavily_search_tool,
     wikipedia_search_tool,
-    reddit_search_tool,
 )
 
 
@@ -83,7 +83,7 @@ def route_to_next_topic(
         # Get preferred tools and subreddits from YAML, or use defaults
         preferred_tools = topic_info.get("tools", None)
         subreddits = topic_info.get("subreddits", None)
-        
+
         # If no tools specified in YAML, fall back to heuristic
         if preferred_tools is None:
             # Heuristic: mark research topics based on keywords in topic or groups
@@ -109,8 +109,12 @@ def route_to_next_topic(
             ]
             topic_l = topic_name.lower()
             group_l = [g.lower() for g in groups]
-            is_research_topic = any(kw in topic_l for kw in research_keywords) or any(
-                kw in g for g in group_l for kw in [
+            is_research_topic = any(
+                kw in topic_l for kw in research_keywords
+            ) or any(
+                kw in g
+                for g in group_l
+                for kw in [
                     "ai",
                     "ml",
                     "science",
@@ -159,7 +163,7 @@ def save_collections(state: MainNewsAgentState) -> MainNewsAgentState:
     """Save the collected news items to a file."""
     with open(f"collections_{state.current_topic}.json", "w") as file:
         json.dump(
-            [item.model_dump(mode='json') for item in state.news_collections],
+            [item.model_dump(mode="json") for item in state.news_collections],
             file,
             indent=2,
         )
@@ -186,7 +190,6 @@ def create_news_worker_agent():
         doc_content_chars_max=4000,
         load_max_docs=15,
     )
-    
     reddit_tool = reddit_search_tool()
     # Order tools to encourage research-first where applicable
     tools = [arxiv_tool, tavily_tool, wikipedia_tool, reddit_tool]
