@@ -72,12 +72,12 @@ def merge_two_articles(article1: NewsItem, article2: NewsItem) -> NewsItem:
     Title: {article2.title}
     Summary: {article2.summary}
 
-    Please merge only the title and summary:
-    1. Create a new title that best captures both articles (max 15 words)
-    2. Combine information from both summaries into a comprehensive summary (150-250 words)
+    Please merge the title and summary:
+    1. For the title: Choose the most descriptive and accurate title from the two, OR if they cover significantly different aspects, create a merged title that captures both. Preserve the exact wording when possible.
+    2. For the summary: Combine information from both summaries into a comprehensive summary (150-250 words) that covers all key points from both items.
 
     Return your response in this exact format:
-    TITLE: [merged title]
+    TITLE: [selected or merged title]
     SUMMARY: [merged summary]"""
 
     try:
@@ -116,8 +116,7 @@ def merge_two_articles(article1: NewsItem, article2: NewsItem) -> NewsItem:
         earliest_created_at = min(article1.created_at, article2.created_at)
 
         return NewsItem(
-            title=merged_title
-            or f"{article1.title} / {article2.title}"[:100],  # Fallback
+            title=merged_title or article1.title,  # Fallback to first article's title
             summary=merged_summary
             or f"{article1.summary}\n\n{article2.summary}",  # Fallback
             sources=all_sources,
@@ -145,7 +144,7 @@ def merge_two_articles(article1: NewsItem, article2: NewsItem) -> NewsItem:
         earliest_created_at = min(article1.created_at, article2.created_at)
         
         return NewsItem(
-            title=f"{article1.title} / {article2.title}"[:100],
+            title=article1.title,  # Use first article's title as fallback
             summary=f"{article1.summary}\n\n{article2.summary}",
             sources=list(set(article1.sources + article2.sources)),
             published_date=article1.published_date or article2.published_date,
