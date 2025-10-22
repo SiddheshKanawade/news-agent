@@ -4,6 +4,8 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_deepseek import ChatDeepSeek
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 
 from prazo.core.config import config
 
@@ -47,5 +49,18 @@ class ChatModel:
                 **model_kwargs,
                 api_key=config.DEEPSEEK_API_KEY,
             )
+        else:
+            raise ValueError(f"Invalid provider: {self.provider}")
+        
+class EmbeddingModel:
+    def __init__(self, provider: str, model_name: str):
+        self.provider = provider
+        self.model_name = model_name
+
+    def get_model(self):
+        if self.provider == "openai":
+            return OpenAIEmbeddings(model=self.model_name, api_key=config.OPENAI_API_KEY)
+        elif self.provider == "google": # TODO: Credentials not working
+            return GoogleGenerativeAIEmbeddings(model=self.model_name, api_key=config.GEMINI_API_KEY)
         else:
             raise ValueError(f"Invalid provider: {self.provider}")

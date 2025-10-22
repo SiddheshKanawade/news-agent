@@ -1,4 +1,4 @@
 from .article import Article
-from .state import MainNewsAgentState, NewsCollectionOutput
+from .state import MainNewsAgentState, NewsCollectionOutput, NewsItem
 
-__all__ = ["Article", "MainNewsAgentState", "NewsCollectionOutput"]
+__all__ = ["Article", "MainNewsAgentState", "NewsCollectionOutput", "NewsItem"]

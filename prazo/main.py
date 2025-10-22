@@ -14,6 +14,7 @@ from prazo.core.config import config
 from prazo.core.logger import ConsoleToolLogger, logger
 from prazo.schemas import MainNewsAgentState
 from prazo.utils.agent.reactive_agent import create_reactive_graph
+from prazo.utils.deduplication import deduplicate
 from prazo.utils.tools import (
     arxiv_search_tool,
     reddit_search_tool,
@@ -58,7 +59,7 @@ def load_topics_data(state: MainNewsAgentState) -> MainNewsAgentState:
 def deduplicate_collections(state: MainNewsAgentState) -> MainNewsAgentState:
     """Deduplicate the collected news items."""
     return {
-        "news_collections": state.news_collections,
+        "news_collections": deduplicate(state.news_collections),
         "current_step": "collections_deduplicated",
     }
 
@@ -299,7 +300,7 @@ Begin searching now."""
             "subreddits",
         ],
         aggregate_output=False,
-        max_tool_calls=15,
+        max_tool_calls=15, # Max tool calls for each topic
         extracted_output_key="news_items",
         max_tokens=16000,
         extractor_prompt="""Extract news items from the following input text: {content}""",
@@ -348,7 +349,7 @@ graph = (
 async def run_graph():
     initial_state = {"messages": []}
     result = await graph.ainvoke(initial_state)
-    logger.info(result)
+    # logger.info(result)
 
 
 # Run the asynchronous function
