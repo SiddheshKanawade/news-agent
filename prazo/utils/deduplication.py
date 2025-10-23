@@ -104,19 +104,22 @@ def merge_two_articles(article1: NewsItem, article2: NewsItem) -> NewsItem:
 
         # Combine sources from both items and remove duplicates
         all_sources = list(set(article1.sources + article2.sources))
-        
+
         # Combine topics and tool_sources from both items and remove duplicates
         all_topics = list(set(article1.topic + article2.topic))
-        all_tool_sources = list(set(article1.tool_source + article2.tool_source))
+        all_tool_sources = list(
+            set(article1.tool_source + article2.tool_source)
+        )
 
         # Combine groups (they should be similar for duplicates)
         all_groups = list(set(article1.groups + article2.groups))
-        
+
         # Use the earlier created_at timestamp (when content was originally created)
         earliest_created_at = min(article1.created_at, article2.created_at)
 
         return NewsItem(
-            title=merged_title or article1.title,  # Fallback to first article's title
+            title=merged_title
+            or article1.title,  # Fallback to first article's title
             summary=merged_summary
             or f"{article1.summary}\n\n{article2.summary}",  # Fallback
             sources=all_sources,
@@ -142,7 +145,7 @@ def merge_two_articles(article1: NewsItem, article2: NewsItem) -> NewsItem:
         # Fallback: simple merge
         # Use the earlier created_at timestamp
         earliest_created_at = min(article1.created_at, article2.created_at)
-        
+
         return NewsItem(
             title=article1.title,  # Use first article's title as fallback
             summary=f"{article1.summary}\n\n{article2.summary}",

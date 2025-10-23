@@ -14,6 +14,7 @@ from prazo.core.logger import ConsoleToolLogger, logger
 from prazo.schemas import MainNewsAgentState
 from prazo.utils.agent.reactive_agent import create_reactive_graph
 from prazo.utils.deduplication import deduplicate
+from prazo.utils.parser.source_service import SourceService
 from prazo.utils.tools import (
     arxiv_search_tool,
     database_check_tool,
@@ -21,7 +22,6 @@ from prazo.utils.tools import (
     tavily_search_tool,
     wikipedia_search_tool,
 )
-from prazo.utils.parser.source_service import SourceService
 
 
 # TODO: Load from YAML file
@@ -164,12 +164,13 @@ def route_to_next_topic(
 def save_collections(state: MainNewsAgentState) -> MainNewsAgentState:
     """Save the collected news items to database."""
     from prazo.core.db import save_news_items
-    
+
     # Save to MongoDB
     saved_count = save_news_items(state.news_collections)
     logger.info(f"Saved {saved_count} news items to database")
-    
+
     return {"current_step": "collections_saved"}
+
 
 def parse_news_items(state: MainNewsAgentState) -> MainNewsAgentState:
     """Parse the daily news items from news channels"""
@@ -205,9 +206,15 @@ def create_news_worker_agent():
     )
     reddit_tool = reddit_search_tool()
     db_check_tool = database_check_tool()
-    
+
     # Order tools to encourage research-first where applicable
-    tools = [db_check_tool, arxiv_tool, tavily_tool, wikipedia_tool, reddit_tool]
+    tools = [
+        db_check_tool,
+        arxiv_tool,
+        tavily_tool,
+        wikipedia_tool,
+        reddit_tool,
+    ]
 
     system_prompt = """You are a news collection agent. Your task is to collect the latest news articles for the topic "{current_topic}" in the groups {current_groups}.
 
@@ -397,8 +404,9 @@ graph = (
 async def run_graph():
     # Initialize database (create indexes)
     from prazo.core.db import initialize_database
+
     initialize_database()
-    
+
     initial_state = {"messages": []}
     await graph.ainvoke(initial_state)
     # logger.info(result)

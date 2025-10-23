@@ -1,24 +1,26 @@
+import html
+import re
 from abc import ABC, abstractmethod
 from datetime import datetime
-import re
-import html
+
 import advertools as adv
 import pandas as pd
 import yaml
 from trafilatura import extract, fetch_url
 
-from prazo.schemas.article import Article
-from prazo.schemas import NewsItem
 from prazo.core.config import config
-from prazo.utils.chat_models import ChatModel
 from prazo.core.db import check_urls_exist
+from prazo.schemas import NewsItem
+from prazo.schemas.article import Article
+from prazo.utils.chat_models import ChatModel
+
 
 class BaseParserTool(ABC):
     def __init__(self, sitemap_url: str):
         self.sitemap_url = sitemap_url
-        
+
     def load_source_yaml(self, source_yaml: str = config.SOURCES_FILE) -> dict:
-        with open(source_yaml, 'r') as file:
+        with open(source_yaml, "r") as file:
             return yaml.safe_load(file)
 
     def extract_text(self, url: str) -> str:
@@ -77,10 +79,12 @@ class NDTVProfitParserTool(BaseParserTool):
     def filter_urls(self, url_df: pd.DataFrame, **kwargs) -> list[str]:
         source_data = self.load_source_yaml()
         print(source_data)
-        include = source_data['ndtv_profit']["include"]
-        filtered_df = url_df[url_df["loc"].apply(lambda x: x.split("/")[3] in include)]
+        include = source_data["ndtv_profit"]["include"]
+        filtered_df = url_df[
+            url_df["loc"].apply(lambda x: x.split("/")[3] in include)
+        ]
         return filtered_df
-    
+
     def get_title(self, html_text: str) -> str | None:
         matches = re.findall(r"<p[^>]*>(.*?)</p>", html_text, flags=re.DOTALL)
 
@@ -91,10 +95,10 @@ class NDTVProfitParserTool(BaseParserTool):
         paragraph = html.unescape(matches[0].strip())
 
         # Split on '.' and return the first part
-        first_sentence = paragraph.split('.')[0].strip()
+        first_sentence = paragraph.split(".")[0].strip()
 
         return first_sentence or None
-    
+
     def summarise_article(self, content: str) -> str:
         llm = ChatModel(provider="openai", model_name="gpt-4o-mini").llm()
         prompt = f"""
@@ -120,7 +124,7 @@ class NDTVProfitParserTool(BaseParserTool):
         articles = []
         for _, row in url_df.iterrows():
             url = row["loc"]
-            title = self.get_title(row['image_caption'])
+            title = self.get_title(row["image_caption"])
             published_date = row["lastmod"]
             assert isinstance(
                 published_date, datetime
@@ -128,17 +132,19 @@ class NDTVProfitParserTool(BaseParserTool):
             content = self.extract_text(url)
             existing_urls = check_urls_exist([url])
             if len(existing_urls) == 0:
-                articles.append(NewsItem(
-                    title=title,
-                    summary=self.summarise_article(content),
-                    sources=[url],
-                    published_date=published_date,
-                    topic=["NDTV Profit", url.split("/")[3]],
-                    groups=["NDTV Profit"],
-                    tool_source=["daily_news"],
-                    created_at=datetime.now(),
-                    updated_at=datetime.now(),
-                ))
+                articles.append(
+                    NewsItem(
+                        title=title,
+                        summary=self.summarise_article(content),
+                        sources=[url],
+                        published_date=published_date,
+                        topic=["NDTV Profit", url.split("/")[3]],
+                        groups=["NDTV Profit"],
+                        tool_source=["daily_news"],
+                        created_at=datetime.now(),
+                        updated_at=datetime.now(),
+                    )
+                )
         return articles
 
 

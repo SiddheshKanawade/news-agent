@@ -19,17 +19,18 @@ class SourceService(BaseTool):
     description: str = (
         "Service for fetching news articles from different news channels like BBC, NDTV Profit, NY Times etc. Tool ensures that the news articles are latest and not already processed."
     )
-    
+
     # Define source_config_map as a Pydantic field
     source_config_map: Dict[Source, SourceConfig] = Field(
         default_factory=lambda: SOURCE_CONFIG_MAP,
-        description="Mapping of sources to their configurations"
+        description="Mapping of sources to their configurations",
     )
-    
+
     class Config:
         """Pydantic configuration"""
+
         arbitrary_types_allowed = True
-        
+
     def summarise(self, articles: list[Article]) -> list[Article]:
         return articles
 

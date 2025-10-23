@@ -22,9 +22,13 @@ class Config(BaseModel):
     REDDIT_CLIENT_ID: Optional[str] = os.getenv("REDDIT_CLIENT_ID")
     REDDIT_CLIENT_SECRET: Optional[str] = os.getenv("REDDIT_CLIENT_SECRET")
     REDDIT_USER_AGENT: Optional[str] = os.getenv("REDDIT_USER_AGENT")
-    MONGODB_URI: Optional[str] = os.getenv("MONGODB_URI", "mongodb://localhost:27017/")
+    MONGODB_URI: Optional[str] = os.getenv(
+        "MONGODB_URI", "mongodb://localhost:27017/"
+    )
     MONGODB_DB: Optional[str] = os.getenv("MONGODB_DB", "news_agent")
-    MONGODB_COLLECTION: Optional[str] = os.getenv("MONGODB_COLLECTION", "news_items")
+    MONGODB_COLLECTION: Optional[str] = os.getenv(
+        "MONGODB_COLLECTION", "news_items"
+    )
     TOPICS_FILE: Optional[str] = "prazo/core/topics.yaml"
     SOURCES_FILE: Optional[str] = "prazo/core/sources.yaml"
 
