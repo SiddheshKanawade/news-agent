@@ -7,7 +7,7 @@ let totalItems = 0;
 let currentCategory = 'all';
 
 // API Configuration
-const API_URL = 'http://localhost:8000/api/news';
+const API_URL = 'https://news-agent-service.wonderfulsmoke-89cc5644.westus2.azurecontainerapps.io/api/news';
 const ITEMS_PER_PAGE = 50;
 
 // Initialize the app
