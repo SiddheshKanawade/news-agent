@@ -15,7 +15,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-install-project --no-dev --no-editable
 
 # Copy source code (preserve directory structure)
-COPY ./frontend ./frontend
+COPY ./service ./service
 
 # Install project itself (reusing cached deps)
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -31,7 +31,7 @@ WORKDIR /app
 
 # Copy only what's needed from builder
 COPY --from=builder /app/.venv /app/.venv
-COPY --from=builder /app/frontend ./frontend
+COPY --from=builder /app/service ./service
 
 # Ensure venv executables and packages are accessible
 ENV PATH="/app/.venv/bin:$PATH"
@@ -46,4 +46,4 @@ USER appuser
 EXPOSE 8000
 
 # Run the main script
-CMD ["python", "frontend/api.py"]
+CMD ["python", "service/api.py"]

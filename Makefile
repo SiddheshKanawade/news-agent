@@ -1,18 +1,18 @@
 IMAGE_NAME=news-agent:latest
 SERVICE_IMAGE_NAME=news-service:latest
 format:
-	autoflake --remove-all-unused-imports --recursive --remove-unused-variables --in-place prazo frontend --exclude=__init__.py
-	black prazo frontend --line-length 80
-	isort --profile black prazo frontend --line-length 80
+	autoflake --remove-all-unused-imports --recursive --remove-unused-variables --in-place prazo service --exclude=__init__.py
+	black prazo service --line-length 80
+	isort --profile black prazo service --line-length 80
 
 run:
 	uv run python -m prazo.main
 
 service:
-	python frontend/api.py
+	python service/api.py
 
-frontend:
-	cd frontend && python -m http.server 3000
+docs:
+	cd docs && python -m http.server 3000
 
 docker-local:
 	docker compose -f docker-compose-agent.yml build
