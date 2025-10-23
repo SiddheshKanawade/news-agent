@@ -105,6 +105,7 @@ def get_news():
         limit = request.args.get('limit', 50, type=int)
         offset = request.args.get('offset', 0, type=int)
         reset_cache = request.args.get('reset', 'false').lower() == 'true'
+        category = request.args.get('category', 'all')  # 'all', 'daily', or 'topics'
         
         # Limit max items per request to prevent abuse
         limit = min(limit, 100)
@@ -125,11 +126,20 @@ def get_news():
         unique_items = []
         current_offset = offset
         
+        # Build query filter based on category
+        query_filter = {}
+        if category == 'daily':
+            # Daily news typically comes from Tavily or other general news sources
+            query_filter = {'tool_source': {'$in': ['daily_news']}}
+        elif category == 'topics':
+            # Topics/followed sources include ArXiv, Wikipedia, Reddit, etc.
+            query_filter = {'tool_source': {'$in': ['arxiv', 'ArXiv', 'wikipedia', 'Wikipedia', 'reddit', 'Reddit', 'tavily', 'Tavily']}}
+        
         # Keep fetching until we have enough unique items or run out of data
         while len(unique_items) < limit:
             # Fetch a batch of news items sorted by published_date (most recent first)
             news_items = list(
-                collection.find({})
+                collection.find(query_filter)
                 .sort([
                     ('published_date', pymongo.DESCENDING),
                     ('created_at', pymongo.DESCENDING)  # Fallback sort
@@ -163,8 +173,8 @@ def get_news():
         # Serialize and prepare response
         serialized_items = [serialize_news_item(item) for item in unique_items]
         
-        # Get total count
-        total_count = collection.count_documents({})
+        # Get total count for the category
+        total_count = collection.count_documents(query_filter)
         
         # Calculate if there are more items
         has_more = current_offset + len(news_items) < total_count
