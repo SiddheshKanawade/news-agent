@@ -1,4 +1,4 @@
-name: Deploy to Azure Container Apps
+name: Deploy Agent(Docker Image) to Azure Container App Job
 
 on:
     workflow_dispatch:
