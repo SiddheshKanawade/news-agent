@@ -82,7 +82,10 @@ frontend/
   - Automatically deduplicates based on source URLs
   - Default limit: 50 items per request
   - Max limit: 100 items per request
-  - Category options: `all`, `daily` (Tavily news), `topics` (ArXiv, Wikipedia, Reddit)
+  - Category options: 
+    - `all` - All news items
+    - `daily` - Items with tool_source='daily_news'
+    - `topics` - Items where tool_source ≠ 'daily_news' (includes empty/missing tool_source)
   - Use `reset=true` to clear the deduplication cache (done automatically on page load)
 - `GET /api/news/stats` - Get statistics about the collection
 - `GET /api/health` - Health check endpoint (includes cache size)
@@ -97,8 +100,8 @@ The API connects to MongoDB using the configuration from `prazo/core/config.py`.
 ### Tab Navigation
 Switch between different news categories:
 - **🌐 All News** - All news items from all sources
-- **📅 Daily News** - Breaking news and current events (Tavily)
-- **📚 Followed Topics** - Curated content from ArXiv, Wikipedia, Reddit
+- **📅 Daily News** - Breaking news and current events (tool_source: daily_news)
+- **📚 Followed Topics** - Everything else (ArXiv, Wikipedia, Reddit, Tavily, and items with empty/missing tool_source)
 
 ### Search
 Type in the search box to filter news by title, summary, topic, or group in real-time.

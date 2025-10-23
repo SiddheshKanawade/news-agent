@@ -21,7 +21,7 @@ def tavily_search_tool(
     days: int = 7,
     time_range: Optional[
         Literal["day", "week", "month", "year", "d", "w", "m", "y"]
-    ] = None,
+    ] = "week",
     auto_parameters: bool = False,
     search_depth: Literal["basic", "advanced"] = "basic",
     chunks_per_source: int = 3,
@@ -38,7 +38,7 @@ def tavily_search_tool(
         topic=topic,
         include_domains=include_domains,
         exclude_domains=exclude_domains,
-        days=days,
+        # days=days,
         time_range=time_range,
         auto_parameters=auto_parameters,
         search_depth=search_depth,

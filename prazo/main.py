@@ -353,7 +353,7 @@ Begin searching now."""
             "subreddits",
         ],
         aggregate_output=False,
-        max_tool_calls=3,  # Max tool calls for each topic
+        max_tool_calls=25,  # Max tool calls for each topic
         extracted_output_key="news_items",
         max_tokens=16000,
         extractor_prompt="""Extract news items from the following input text: {content}""",

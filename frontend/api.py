@@ -132,8 +132,9 @@ def get_news():
             # Daily news typically comes from Tavily or other general news sources
             query_filter = {'tool_source': {'$in': ['daily_news']}}
         elif category == 'topics':
-            # Topics/followed sources include ArXiv, Wikipedia, Reddit, etc.
-            query_filter = {'tool_source': {'$in': ['arxiv', 'ArXiv', 'wikipedia', 'Wikipedia', 'reddit', 'Reddit', 'tavily', 'Tavily']}}
+            # Topics/followed sources: everything that is NOT daily_news
+            # This includes empty tool_source, missing tool_source, and any other sources
+            query_filter = {'tool_source': {'$nin': ['daily_news']}}
         
         # Keep fetching until we have enough unique items or run out of data
         while len(unique_items) < limit:

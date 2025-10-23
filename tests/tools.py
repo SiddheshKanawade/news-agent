@@ -3,7 +3,7 @@ from prazo.utils.tools import tavily_search_tool, wikipedia_search_tool, arxiv_s
 
 def test_tavily_search_tool():
     tool = tavily_search_tool()
-    print(tool.invoke({"query": "What happened at the last wimbledon"}))
+    print(tool.invoke({"query": "Deepseek News"}))
 
 
 def test_wikipedia_search_tool():
@@ -23,10 +23,10 @@ def test_reddit_search_tool():
     print(tool.invoke({"query": "Reinforcement Learning", "sort": "new", "subreddit": "reinforcementlearning", "limit": "5", "time_filter": "week"}))
 
 def main():
-    # test_tavily_search_tool()
+    test_tavily_search_tool()
     # test_wikipedia_search_tool()
     # test_arxiv_search_tool()
     # test_ddg_search_tool()
-    test_reddit_search_tool()
+    # test_reddit_search_tool()
 if __name__ == "__main__":
     main()
