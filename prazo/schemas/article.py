@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 class Article(BaseModel):
     url: str
+    title: str = Field(default="")
     content: str  # Raw content of the article returned by trafilatura
     summary: str = Field(default="")
     source: str = Field(default="")

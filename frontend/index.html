@@ -10,8 +10,24 @@
     <div class="container">
         <header>
             <h1>📰 News Agent</h1>
-            <p class="subtitle">Your AI-Powered News Aggregator</p>
+            <p class="subtitle">Your AI-Powered Feed Setter.</p>
         </header>
+
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-btn active" data-category="all">
+                <span class="tab-icon">🌐</span>
+                <span>All News</span>
+            </button>
+            <button class="tab-btn" data-category="daily">
+                <span class="tab-icon">📅</span>
+                <span>Daily News</span>
+            </button>
+            <button class="tab-btn" data-category="topics">
+                <span class="tab-icon">📚</span>
+                <span>Followed Topics</span>
+            </button>
+        </div>
 
         <div class="filters">
             <div class="search-box">
@@ -32,6 +48,19 @@
         <div id="stats" class="stats"></div>
         
         <div id="newsContainer" class="news-container"></div>
+
+        <!-- Pagination Controls -->
+        <div id="paginationControls" class="pagination-controls">
+            <button id="loadMoreBtn" class="load-more-btn">Load More</button>
+        </div>
+    </div>
+
+    <!-- Modal Dialog for Full Summary -->
+    <div id="articleModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <div id="modalBody" class="modal-body"></div>
+        </div>
     </div>
 
     <script src="script.js"></script>

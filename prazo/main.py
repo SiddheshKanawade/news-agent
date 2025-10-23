@@ -14,6 +14,7 @@ from prazo.core.logger import ConsoleToolLogger, logger
 from prazo.schemas import MainNewsAgentState
 from prazo.utils.agent.reactive_agent import create_reactive_graph
 from prazo.utils.deduplication import deduplicate
+from prazo.utils.parser.source_service import SourceService
 from prazo.utils.tools import (
     arxiv_search_tool,
     database_check_tool,
@@ -66,7 +67,7 @@ def deduplicate_collections(state: MainNewsAgentState) -> MainNewsAgentState:
 
 def route_to_next_topic(
     state: MainNewsAgentState,
-) -> Command[Literal["process_topic", "deduplicate_collections"]]:
+) -> Command[Literal["process_topic", "parse_news_items"]]:
     """Accumulate current news items and decide whether to process next topic or finish."""
     # First, accumulate any current news items from the last topic processing
     updates = {}
@@ -157,18 +158,30 @@ def route_to_next_topic(
     else:
         logger.info("All topics processed, saving collections")
         updates.update({"current_step": "all_topics_processed"})
-        return Command(goto="deduplicate_collections", update=updates)
+        return Command(goto="parse_news_items", update=updates)
 
 
 def save_collections(state: MainNewsAgentState) -> MainNewsAgentState:
     """Save the collected news items to database."""
     from prazo.core.db import save_news_items
-    
+
     # Save to MongoDB
     saved_count = save_news_items(state.news_collections)
     logger.info(f"Saved {saved_count} news items to database")
-    
+
     return {"current_step": "collections_saved"}
+
+
+def parse_news_items(state: MainNewsAgentState) -> MainNewsAgentState:
+    """Parse the daily news items from news channels"""
+    previous_news_items = state.news_collections
+    source_service = SourceService()
+    daily_news_items = source_service.fetch_and_parse()
+    all_news_items = previous_news_items + daily_news_items
+    return {
+        "current_step": "daily_news_items_parsed",
+        "news_collections": all_news_items,
+    }
 
 
 def create_news_worker_agent():
@@ -193,9 +206,15 @@ def create_news_worker_agent():
     )
     reddit_tool = reddit_search_tool()
     db_check_tool = database_check_tool()
-    
+
     # Order tools to encourage research-first where applicable
-    tools = [db_check_tool, arxiv_tool, tavily_tool, wikipedia_tool, reddit_tool]
+    tools = [
+        db_check_tool,
+        arxiv_tool,
+        tavily_tool,
+        wikipedia_tool,
+        reddit_tool,
+    ]
 
     system_prompt = """You are a news collection agent. Your task is to collect the latest news articles for the topic "{current_topic}" in the groups {current_groups}.
 
@@ -334,7 +353,7 @@ Begin searching now."""
             "subreddits",
         ],
         aggregate_output=False,
-        max_tool_calls=25,  # Max tool calls for each topic
+        max_tool_calls=3,  # Max tool calls for each topic
         extracted_output_key="news_items",
         max_tokens=16000,
         extractor_prompt="""Extract news items from the following input text: {content}""",
@@ -349,12 +368,14 @@ def create_main_news_agent():
     builder.add_node("load_topics", load_topics_data)
     builder.add_node("route_to_next_topic", route_to_next_topic)
     builder.add_node("process_topic", create_news_worker_agent().compile())
+    builder.add_node("parse_news_items", parse_news_items)
     builder.add_node("deduplicate_collections", deduplicate_collections)
     builder.add_node("save_collections", save_collections)
 
     builder.set_entry_point("load_topics")
     builder.add_edge("load_topics", "route_to_next_topic")
     builder.add_edge("process_topic", "route_to_next_topic")
+    builder.add_edge("parse_news_items", "deduplicate_collections")
     builder.add_edge("deduplicate_collections", "save_collections")
     builder.add_edge("save_collections", END)
 
@@ -383,8 +404,9 @@ graph = (
 async def run_graph():
     # Initialize database (create indexes)
     from prazo.core.db import initialize_database
+
     initialize_database()
-    
+
     initial_state = {"messages": []}
     await graph.ainvoke(initial_state)
     # logger.info(result)

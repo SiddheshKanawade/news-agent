@@ -1,5 +1,7 @@
 from enum import Enum
 
+from prazo.utils.parser.helper import get_latest_sitemap
+
 from .parser_tools import BaseParserTool, NDTVProfitParserTool
 
 
@@ -47,7 +49,9 @@ SOURCE_CONFIG_MAP = {
     # ),
     Source.NDTV_PROFIT: SourceConfig(
         source=Source.NDTV_PROFIT,
-        sitemap_url="https://www.ndtvprofit.com/sitemap/sitemap-daily-2025-10-19.xml",  # TODO: Change to daily sitemap
+        sitemap_url=get_latest_sitemap(
+            "https://www.ndtvprofit.com/sitemap.xml"
+        ),
         parser_tool=NDTVProfitParserTool,
         filter_kwargs={},
     ),

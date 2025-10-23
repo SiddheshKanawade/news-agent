@@ -4,6 +4,7 @@ let currentOffset = 0;
 let isLoading = false;
 let hasMore = true;
 let totalItems = 0;
+let currentCategory = 'all';
 
 // API Configuration
 const API_URL = 'http://localhost:8000/api/news';
@@ -13,11 +14,22 @@ const ITEMS_PER_PAGE = 50;
 document.addEventListener('DOMContentLoaded', () => {
     loadNewsItems(true);
     setupEventListeners();
-    setupInfiniteScroll();
+    setupModalHandlers();
 });
 
 // Setup event listeners
 function setupEventListeners() {
+    // Tab buttons
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            tabButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentCategory = btn.dataset.category;
+            resetAndLoadNews();
+        });
+    });
+
     // Search functionality
     const searchInput = document.getElementById('searchInput');
     searchInput.addEventListener('input', (e) => {
@@ -37,30 +49,114 @@ function setupEventListeners() {
     // Refresh button
     const refreshBtn = document.getElementById('refreshBtn');
     refreshBtn.addEventListener('click', () => {
-        // Reset pagination state
-        allNewsItems = [];
-        currentOffset = 0;
-        hasMore = true;
-        document.getElementById('newsContainer').innerHTML = '';
-        loadNewsItems(true);
+        resetAndLoadNews();
+    });
+
+    // Load more button
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    loadMoreBtn.addEventListener('click', () => {
+        loadNewsItems(false);
     });
 }
 
-// Setup infinite scroll
-function setupInfiniteScroll() {
-    window.addEventListener('scroll', () => {
-        // Check if user has scrolled near the bottom
-        const scrollHeight = document.documentElement.scrollHeight;
-        const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-        const clientHeight = document.documentElement.clientHeight;
+// Reset state and load news
+function resetAndLoadNews() {
+    allNewsItems = [];
+    currentOffset = 0;
+    hasMore = true;
+    document.getElementById('newsContainer').innerHTML = '';
+    loadNewsItems(true);
+}
 
-        // Load more when user is 500px from bottom
-        if (scrollHeight - scrollTop - clientHeight < 500) {
-            if (!isLoading && hasMore) {
-                loadNewsItems(false);
-            }
+// Setup modal handlers
+function setupModalHandlers() {
+    const modal = document.getElementById('articleModal');
+    const modalClose = document.getElementById('modalClose');
+
+    // Close modal when clicking X button
+    modalClose.addEventListener('click', () => {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    });
+
+    // Close modal when clicking outside
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
         }
     });
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.style.display === 'block') {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    });
+}
+
+// Open modal with article details
+function openArticleModal(item) {
+    const modal = document.getElementById('articleModal');
+    const modalBody = document.getElementById('modalBody');
+
+    // Format date
+    const publishedDate = item.published_date
+        ? new Date(item.published_date).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        })
+        : 'Date not available';
+
+    // Create tool source badges
+    const toolBadges = (item.tool_source || []).map(tool =>
+        `<span class="badge ${tool.toLowerCase()}">${tool}</span>`
+    ).join('');
+
+    // Create topic badges
+    const topicBadges = (item.topic || []).map(topic =>
+        `<span class="badge topic">${topic}</span>`
+    ).join('');
+
+    // Create group badges
+    const groupBadges = (item.groups || []).map(group =>
+        `<span class="badge group">${group}</span>`
+    ).join('');
+
+    // Create source links
+    const sourceLinks = (item.sources || []).map((source, idx) =>
+        `<a href="${source}" target="_blank" class="source-link" title="${source}">
+            📄 Source ${idx + 1}
+        </a>`
+    ).join('');
+
+    modalBody.innerHTML = `
+        <h2 class="modal-title">${item.title}</h2>
+        <div class="modal-meta">
+            <div class="modal-date">📅 ${publishedDate}</div>
+            <div class="modal-badges">
+                ${toolBadges}
+                ${topicBadges}
+                ${groupBadges}
+            </div>
+        </div>
+        <div class="modal-summary">${item.summary}</div>
+        ${sourceLinks ? `
+            <div class="modal-sources">
+                <h4>Sources</h4>
+                <div class="source-links">
+                    ${sourceLinks}
+                </div>
+            </div>
+        ` : ''}
+    `;
+
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
 }
 
 // Load news items from API with pagination
@@ -78,20 +174,12 @@ async function loadNewsItems(isInitialLoad = false) {
         loadingDiv.style.display = 'block';
         errorDiv.style.display = 'none';
         newsContainer.innerHTML = '';
-    } else {
-        // Show loading indicator at bottom for infinite scroll
-        const loadingIndicator = document.createElement('div');
-        loadingIndicator.id = 'loadingMore';
-        loadingIndicator.className = 'loading';
-        loadingIndicator.textContent = 'Loading more news...';
-        loadingIndicator.style.gridColumn = '1/-1';
-        newsContainer.appendChild(loadingIndicator);
     }
 
     try {
         // Add reset parameter for initial load to clear the deduplication cache
         const resetParam = isInitialLoad ? '&reset=true' : '';
-        const url = `${API_URL}?limit=${ITEMS_PER_PAGE}&offset=${currentOffset}${resetParam}`;
+        const url = `${API_URL}?limit=${ITEMS_PER_PAGE}&offset=${currentOffset}&category=${currentCategory}${resetParam}`;
         const response = await fetch(url);
 
         if (!response.ok) {
@@ -112,15 +200,10 @@ async function loadNewsItems(isInitialLoad = false) {
         // Filter and display
         filterAndDisplayNews();
         updateStats();
+        updatePaginationControls();
 
         if (isInitialLoad) {
             loadingDiv.style.display = 'none';
-        } else {
-            // Remove loading indicator
-            const loadingIndicator = document.getElementById('loadingMore');
-            if (loadingIndicator) {
-                loadingIndicator.remove();
-            }
         }
     } catch (error) {
         console.error('Error loading news:', error);
@@ -129,12 +212,6 @@ async function loadNewsItems(isInitialLoad = false) {
             loadingDiv.style.display = 'none';
             errorDiv.style.display = 'block';
             errorDiv.textContent = `Failed to load news items: ${error.message}. Make sure the API server is running on ${API_URL}`;
-        } else {
-            // Remove loading indicator and show error
-            const loadingIndicator = document.getElementById('loadingMore');
-            if (loadingIndicator) {
-                loadingIndicator.remove();
-            }
         }
     } finally {
         isLoading = false;
@@ -193,6 +270,44 @@ function displayNewsItems(items) {
     });
 }
 
+// Truncate text to first N words
+function truncateText(text, wordLimit) {
+    const words = text.split(' ');
+    if (words.length <= wordLimit) {
+        return text;
+    }
+    return words.slice(0, wordLimit).join(' ') + '...';
+}
+
+// Truncate title and summary combined to N words total
+function truncateTitleAndSummary(title, summary, totalWordLimit) {
+    const combinedText = title + ' ' + summary;
+    const words = combinedText.split(' ');
+
+    if (words.length <= totalWordLimit) {
+        return { title, summary };
+    }
+
+    // Calculate how many words to use from title and summary
+    const titleWords = title.split(' ');
+    const titleWordCount = titleWords.length;
+
+    if (titleWordCount >= totalWordLimit) {
+        // If title alone exceeds limit, truncate title only
+        return {
+            title: truncateText(title, totalWordLimit),
+            summary: ''
+        };
+    }
+
+    // Use full title and truncate summary
+    const remainingWords = totalWordLimit - titleWordCount;
+    return {
+        title: title,
+        summary: truncateText(summary, remainingWords)
+    };
+}
+
 // Create a news card element
 function createNewsCard(item) {
     const card = document.createElement('div');
@@ -202,7 +317,7 @@ function createNewsCard(item) {
     const publishedDate = item.published_date
         ? new Date(item.published_date).toLocaleDateString('en-US', {
             year: 'numeric',
-            month: 'long',
+            month: 'short',
             day: 'numeric'
         })
         : 'Date not available';
@@ -222,31 +337,28 @@ function createNewsCard(item) {
         `<span class="badge group">${group}</span>`
     ).join('');
 
-    // Create source links
-    const sourceLinks = (item.sources || []).map((source, idx) =>
-        `<a href="${source}" target="_blank" class="source-link" title="${source}">
-            📄 Source ${idx + 1}
-        </a>`
-    ).join('');
+    // Truncate title + summary to 30 words total for consistent card size
+    const truncated = truncateTitleAndSummary(item.title, item.summary, 30);
+    const displayTitle = truncated.title;
+    const displaySummary = truncated.summary;
 
     card.innerHTML = `
-        <h2>${item.title}</h2>
+        <h2>${displayTitle}</h2>
         <div class="news-meta">
             ${toolBadges}
             ${topicBadges}
             ${groupBadges}
         </div>
         <div class="news-date">📅 ${publishedDate}</div>
-        <div class="news-summary">${item.summary}</div>
-        ${sourceLinks ? `
-            <div class="news-sources">
-                <h4>Sources</h4>
-                <div class="source-links">
-                    ${sourceLinks}
-                </div>
-            </div>
-        ` : ''}
+        ${displaySummary ? `<div class="news-summary">${displaySummary}</div>` : ''}
+        <button class="read-more-btn">Read More</button>
     `;
+
+    // Add click handler to open modal
+    const readMoreBtn = card.querySelector('.read-more-btn');
+    readMoreBtn.addEventListener('click', () => {
+        openArticleModal(item);
+    });
 
     return card;
 }
@@ -274,12 +386,24 @@ function updateStats() {
 
         statsText += ' news items';
 
-        // Add scroll hint if there are more to load
-        if (hasMore) {
-            statsText += ' • Scroll down to load more';
-        }
-
         statsDiv.textContent = statsText;
+    }
+}
+
+// Update pagination controls visibility
+function updatePaginationControls() {
+    const paginationControls = document.getElementById('paginationControls');
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+
+    if (hasMore && !isLoading) {
+        paginationControls.style.display = 'flex';
+        loadMoreBtn.textContent = 'Load More';
+        loadMoreBtn.disabled = false;
+    } else if (isLoading) {
+        loadMoreBtn.textContent = 'Loading...';
+        loadMoreBtn.disabled = true;
+    } else {
+        paginationControls.style.display = 'none';
     }
 }
 

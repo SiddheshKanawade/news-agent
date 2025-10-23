@@ -1,0 +1,3 @@
+ndtv_profit:
+  include:
+    ["business", "markets", "personal-finance", "quarterly-earnings", "nation"]

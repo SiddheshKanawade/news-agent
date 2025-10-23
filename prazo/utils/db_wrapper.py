@@ -2,7 +2,7 @@
 
 from typing import List, Set
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from prazo.core.db import check_urls_exist
 from prazo.core.logger import logger
@@ -77,4 +77,3 @@ class DatabaseAPIWrapper(BaseModel):
                 response += f"  - {url}\n"
 
         return response.strip()
-
