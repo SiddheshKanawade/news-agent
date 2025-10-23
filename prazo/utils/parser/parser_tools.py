@@ -1,13 +1,13 @@
 import html
 import re
+import time
 from abc import ABC, abstractmethod
 from datetime import datetime
-import time
 
 import advertools as adv
 import pandas as pd
-import yaml
 import requests
+import yaml
 from trafilatura import extract, fetch_url
 from trafilatura.settings import use_config
 
@@ -32,7 +32,7 @@ class BaseParserTool(ABC):
             # Configure trafilatura with custom settings
             newconfig = use_config()
             newconfig.set("DEFAULT", "MAX_REDIRECTS", "5")
-            
+
             # First try with trafilatura's fetch_url
             try:
                 html = fetch_url(url, config=newconfig)
@@ -41,29 +41,31 @@ class BaseParserTool(ABC):
                     if text:
                         return text.strip()
             except Exception as fetch_error:
-                logger.warning(f"Trafilatura fetch failed, trying requests library: {str(fetch_error)}")
-            
+                logger.warning(
+                    f"Trafilatura fetch failed, trying requests library: {str(fetch_error)}"
+                )
+
             # Fallback to requests library with custom settings
             headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
             }
             response = requests.get(
-                url, 
-                headers=headers, 
+                url,
+                headers=headers,
                 timeout=30,
                 allow_redirects=True,
-                max_redirects=5
+                max_redirects=5,
             )
             response.raise_for_status()
-            
+
             # Extract text using trafilatura
             text = extract(response.text, config=newconfig)
             if text:
                 return text.strip()
-            
+
             logger.warning(f"No text extracted from url: {url}")
             return None
-            
+
         except requests.exceptions.TooManyRedirects:
             logger.error(f"Too many redirects for url: {url}")
             return None
@@ -129,7 +131,9 @@ class NDTVProfitParserTool(BaseParserTool):
 
     def get_title(self, html_text: str) -> str | None:
         try:
-            matches = re.findall(r"<p[^>]*>(.*?)</p>", html_text, flags=re.DOTALL)
+            matches = re.findall(
+                r"<p[^>]*>(.*?)</p>", html_text, flags=re.DOTALL
+            )
 
             if not matches:
                 return None
@@ -178,19 +182,23 @@ class NDTVProfitParserTool(BaseParserTool):
                 assert isinstance(
                     published_date, datetime
                 ), "Published date in NDTV Profit sitemap is not a datetime object"
-                
+
                 # Check if URL already exists before extracting content
                 existing_urls = check_urls_exist([url])
                 if len(existing_urls) > 0:
                     logger.info(f"Skipping existing URL: {url}")
                     continue
-                
+
                 content = self.extract_text(url)
-                
+
                 articles.append(
                     NewsItem(
                         title=title,
-                        summary=self.summarise_article(content) if content is not None else "No content found",
+                        summary=(
+                            self.summarise_article(content)
+                            if content is not None
+                            else "No content found"
+                        ),
                         sources=[url],
                         published_date=published_date,
                         topic=["NDTV Profit", url.split("/")[3]],
@@ -201,12 +209,14 @@ class NDTVProfitParserTool(BaseParserTool):
                     )
                 )
                 time.sleep(1)
-                
+
             except Exception as e:
                 logger.error(f"Failed to parse article from {url}: {str(e)}")
                 continue
-                
-        logger.info(f"Successfully parsed {len(articles)} articles from NDTV Profit")
+
+        logger.info(
+            f"Successfully parsed {len(articles)} articles from NDTV Profit"
+        )
         return articles
 
 

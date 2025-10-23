@@ -1,5 +1,5 @@
-from typing import Dict
 import traceback
+from typing import Dict
 
 from langchain_core.tools import BaseTool
 from pydantic import Field
