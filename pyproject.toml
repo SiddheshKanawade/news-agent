@@ -29,6 +29,7 @@ dependencies = [
     "pydantic>=2.12.3",
     "pymongo>=4.15.3",
     "python-dotenv>=1.1.1",
+    "pyyaml>=6.0.3",
     "trafilatura>=2.0.0",
     "trustcall>=0.0.39",
     "wikipedia>=1.4.0",

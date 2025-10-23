@@ -1,0 +1,38 @@
+services:
+  agentic-update-agent:
+    platform: linux/x86_64
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    container_name: agentic-update-agent
+    env_file:
+      - .env # Explicitly specify env file (optional if using default .env)
+    environment:
+      # API Keys
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+      TAVILY_API_KEY: ${TAVILY_API_KEY}
+
+      # Langfuse Observability
+      LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY}
+      LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY}
+      LANGFUSE_HOST: ${LANGFUSE_HOST:-https://cloud.langfuse.com}
+
+      # Reddit API
+      REDDIT_CLIENT_ID: ${REDDIT_CLIENT_ID}
+      REDDIT_CLIENT_SECRET: ${REDDIT_CLIENT_SECRET}
+      REDDIT_USER_AGENT: ${REDDIT_USER_AGENT}
+
+      # MongoDB
+      MONGODB_URI: ${MONGODB_URI:-mongodb://localhost:27017/}
+      MONGODB_DB: ${MONGODB_DB:-news_agent}
+      MONGODB_COLLECTION: ${MONGODB_COLLECTION:-news_items}
+
+      # Environment
+      ENV: ${ENV:-production}
+
+    volumes:
+      # Mount config files for easy updates without rebuild
+      - ./prazo/core/topics.yaml:/app/prazo/core/topics.yaml
+      - ./prazo/core/sources.yaml:/app/prazo/core/sources.yaml
