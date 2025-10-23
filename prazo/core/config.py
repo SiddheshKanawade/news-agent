@@ -26,6 +26,7 @@ class Config(BaseModel):
     MONGODB_DB: Optional[str] = os.getenv("MONGODB_DB", "news_agent")
     MONGODB_COLLECTION: Optional[str] = os.getenv("MONGODB_COLLECTION", "news_items")
     TOPICS_FILE: Optional[str] = "prazo/core/topics.yaml"
+    SOURCES_FILE: Optional[str] = "prazo/core/sources.yaml"
 
     def validate_api_keys(self):
         """Validate that required API keys are set."""
@@ -46,10 +47,11 @@ class Config(BaseModel):
                 "LANGFUSE_SECRET_KEY environment variable is not set"
             )
 
-    def validate_topics_file(self):
-        """Validate that the topics file exists."""
+    def validate_yaml_files(self):
         if not os.path.exists(self.TOPICS_FILE):
             raise ValueError(f"Topics file {self.TOPICS_FILE} does not exist")
+        if not os.path.exists(self.SOURCES_FILE):
+            raise ValueError(f"Sources file {self.SOURCES_FILE} does not exist")
 
 
 class ProductionConfig(Config):
@@ -77,4 +79,4 @@ def get_config():
 # Global config instance
 config: Config = get_config()
 config.validate_api_keys()
-config.validate_topics_file()
+config.validate_yaml_files()
