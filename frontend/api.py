@@ -1,9 +1,12 @@
 """
 Simple Flask API to serve news items from MongoDB
 """
-
+import os
 from datetime import datetime
 from typing import List
+from dotenv import load_dotenv
+
+load_dotenv()
 
 import pymongo
 from flask import Flask, jsonify
@@ -16,17 +19,24 @@ from pathlib import Path
 # Add parent directory to path to import prazo
 sys.path.append(str(Path(__file__).parent.parent))
 
-from prazo.core.config import config
-from prazo.core.logger import logger
+import logging
+logger = logging.getLogger(__name__)
+
+
+
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
+MONGODB_URI = os.getenv("MONGODB_URI")
+MONGODB_DB = os.getenv("MONGODB_DB")
+MONGODB_COLLECTION = os.getenv("MONGODB_COLLECTION")
+
 # Initialize MongoDB connection
 try:
-    client = pymongo.MongoClient(config.MONGODB_URI)
-    db = client[config.MONGODB_DB]
-    collection = db[config.MONGODB_COLLECTION]
+    client = pymongo.MongoClient(MONGODB_URI)
+    db = client[MONGODB_DB]
+    collection = db[MONGODB_COLLECTION]
     logger.info("Connected to MongoDB successfully")
 except Exception as e:
     logger.error(f"Failed to connect to MongoDB: {e}")
@@ -261,7 +271,7 @@ def clear_cache():
 if __name__ == '__main__':
     print("Starting News Agent API Server...")
     print(f"API will be available at: http://localhost:8000")
-    print(f"Connected to MongoDB: {config.MONGODB_URI}")
-    print(f"Database: {config.MONGODB_DB}, Collection: {config.MONGODB_COLLECTION}")
+    print(f"Connected to MongoDB: {MONGODB_URI}")
+    print(f"Database: {MONGODB_DB}, Collection: {MONGODB_COLLECTION}")
     app.run(host='0.0.0.0', port=8000, debug=True)
 
