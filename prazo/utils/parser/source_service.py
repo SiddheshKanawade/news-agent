@@ -1,4 +1,5 @@
 from typing import Dict
+import traceback
 
 from langchain_core.tools import BaseTool
 from pydantic import Field
@@ -44,6 +45,7 @@ class SourceService(BaseTool):
                 logger.error(
                     f"Error fetching and parsing {source_config.source}: {e}"
                 )
+                traceback.print_exc()
         return articles
 
     def _run(self, **kwargs) -> list[Article]:

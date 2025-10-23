@@ -2,14 +2,18 @@ import html
 import re
 from abc import ABC, abstractmethod
 from datetime import datetime
+import time
 
 import advertools as adv
 import pandas as pd
 import yaml
+import requests
 from trafilatura import extract, fetch_url
+from trafilatura.settings import use_config
 
 from prazo.core.config import config
 from prazo.core.db import check_urls_exist
+from prazo.core.logger import logger
 from prazo.schemas import NewsItem
 from prazo.schemas.article import Article
 from prazo.utils.chat_models import ChatModel
@@ -25,11 +29,50 @@ class BaseParserTool(ABC):
 
     def extract_text(self, url: str) -> str:
         try:
-            html = fetch_url(url)
-            text = extract(html)
-            return text.strip()
+            # Configure trafilatura with custom settings
+            newconfig = use_config()
+            newconfig.set("DEFAULT", "MAX_REDIRECTS", "5")
+            
+            # First try with trafilatura's fetch_url
+            try:
+                html = fetch_url(url, config=newconfig)
+                if html:
+                    text = extract(html, config=newconfig)
+                    if text:
+                        return text.strip()
+            except Exception as fetch_error:
+                logger.warning(f"Trafilatura fetch failed, trying requests library: {str(fetch_error)}")
+            
+            # Fallback to requests library with custom settings
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+            response = requests.get(
+                url, 
+                headers=headers, 
+                timeout=30,
+                allow_redirects=True,
+                max_redirects=5
+            )
+            response.raise_for_status()
+            
+            # Extract text using trafilatura
+            text = extract(response.text, config=newconfig)
+            if text:
+                return text.strip()
+            
+            logger.warning(f"No text extracted from url: {url}")
+            return None
+            
+        except requests.exceptions.TooManyRedirects:
+            logger.error(f"Too many redirects for url: {url}")
+            return None
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Request failed: {str(e)} for url: {url}")
+            return None
         except Exception as e:
-            raise Exception(f"Text extraction failed: {str(e)}")
+            logger.error(f"Text extraction failed: {str(e)} for url: {url}")
+            return None
 
     @abstractmethod
     def filter_urls(self, url_df: pd.DataFrame, **kwargs) -> list[str]:
@@ -78,7 +121,6 @@ class NDTVProfitParserTool(BaseParserTool):
 
     def filter_urls(self, url_df: pd.DataFrame, **kwargs) -> list[str]:
         source_data = self.load_source_yaml()
-        print(source_data)
         include = source_data["ndtv_profit"]["include"]
         filtered_df = url_df[
             url_df["loc"].apply(lambda x: x.split("/")[3] in include)
@@ -86,18 +128,22 @@ class NDTVProfitParserTool(BaseParserTool):
         return filtered_df
 
     def get_title(self, html_text: str) -> str | None:
-        matches = re.findall(r"<p[^>]*>(.*?)</p>", html_text, flags=re.DOTALL)
+        try:
+            matches = re.findall(r"<p[^>]*>(.*?)</p>", html_text, flags=re.DOTALL)
 
-        if not matches:
+            if not matches:
+                return None
+
+            # Decode HTML entities like &nbsp; and strip whitespace
+            paragraph = html.unescape(matches[0].strip())
+
+            # Split on '.' and return the first part
+            first_sentence = paragraph.split(".")[0].strip()
+
+            return first_sentence or None
+        except Exception as e:
+            logger.error(f"Error getting title: {e} for html_text: {html_text}")
             return None
-
-        # Decode HTML entities like &nbsp; and strip whitespace
-        paragraph = html.unescape(matches[0].strip())
-
-        # Split on '.' and return the first part
-        first_sentence = paragraph.split(".")[0].strip()
-
-        return first_sentence or None
 
     def summarise_article(self, content: str) -> str:
         llm = ChatModel(provider="openai", model_name="gpt-4o-mini").llm()
@@ -124,18 +170,27 @@ class NDTVProfitParserTool(BaseParserTool):
         articles = []
         for _, row in url_df.iterrows():
             url = row["loc"]
-            title = self.get_title(row["image_caption"])
-            published_date = row["lastmod"]
-            assert isinstance(
-                published_date, datetime
-            ), "Published date in NDTV Profit sitemap is not a datetime object"
-            content = self.extract_text(url)
-            existing_urls = check_urls_exist([url])
-            if len(existing_urls) == 0:
+            try:
+                title = self.get_title(row["image_caption"])
+                if title is None:
+                    title = "Untitled"
+                published_date = row["lastmod"]
+                assert isinstance(
+                    published_date, datetime
+                ), "Published date in NDTV Profit sitemap is not a datetime object"
+                
+                # Check if URL already exists before extracting content
+                existing_urls = check_urls_exist([url])
+                if len(existing_urls) > 0:
+                    logger.info(f"Skipping existing URL: {url}")
+                    continue
+                
+                content = self.extract_text(url)
+                
                 articles.append(
                     NewsItem(
                         title=title,
-                        summary=self.summarise_article(content),
+                        summary=self.summarise_article(content) if content is not None else "No content found",
                         sources=[url],
                         published_date=published_date,
                         topic=["NDTV Profit", url.split("/")[3]],
@@ -145,6 +200,13 @@ class NDTVProfitParserTool(BaseParserTool):
                         updated_at=datetime.now(),
                     )
                 )
+                time.sleep(1)
+                
+            except Exception as e:
+                logger.error(f"Failed to parse article from {url}: {str(e)}")
+                continue
+                
+        logger.info(f"Successfully parsed {len(articles)} articles from NDTV Profit")
         return articles
 
 

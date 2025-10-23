@@ -2,11 +2,11 @@ AI, Gemini, Anthropic, OpenAI, GenAI, Alibaba, Agents, Nvidia, Llama, Qwen, Deep
   groups: ["Technology", "AI"]
   tools: ["tavily"] # Research + News + Context + Community
   news: []
-# Reinforcement Learning, Deep Learning, Machine Learning, Neural Networks, Transformers:
-#   groups: ["AI", "Technology"]
-#   tools: ["arxiv", "tavily", "reddit"] # Heavy research topic - use all tools
-#   subreddits: ["reinforcementlearning"]
-#   news: []
+Reinforcement Learning, Deep Learning, Machine Learning, Neural Networks, Transformers:
+  groups: ["AI", "Technology"]
+  tools: ["arxiv", "tavily", "reddit"] # Heavy research topic - use all tools
+  subreddits: ["reinforcementlearning"]
+  news: []
 # Example: For generic news topics
 # US Politics, Elections:
 #   groups: ["Politics", "US"]
