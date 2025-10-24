@@ -128,8 +128,16 @@ class NDTVProfitParserTool(BaseParserTool):
             url_df["loc"].apply(lambda x: x.split("/")[3] in include)
         ]
         return filtered_df
-
-    def get_title(self, html_text: str) -> str | None:
+    
+    def get_title_from_url(self, url):
+        try:
+            title = url.split("/")[-1].replace("-", " ").title()
+            return title
+        except Exception as e:
+            logger.error(f"Error getting title: {e} for url: {url}")
+            return None
+    
+    def get_title_from_image_caption(self, html_text: str) -> str | None:
         try:
             matches = re.findall(
                 r"<p[^>]*>(.*?)</p>", html_text, flags=re.DOTALL
@@ -147,6 +155,16 @@ class NDTVProfitParserTool(BaseParserTool):
             return first_sentence or None
         except Exception as e:
             logger.error(f"Error getting title: {e} for html_text: {html_text}")
+            return None
+
+    def get_title(self, html_text: str, url: str) -> str | None:
+        try:
+            title = self.get_title_from_url(url)
+            if title is None:
+                title = self.get_title_from_image_caption(html_text)
+            return title
+        except Exception as e:
+            logger.error(f"Error getting title: {e} for url: {url}")
             return None
 
     def summarise_article(self, content: str) -> str:
@@ -175,7 +193,7 @@ class NDTVProfitParserTool(BaseParserTool):
         for _, row in url_df.iterrows():
             url = row["loc"]
             try:
-                title = self.get_title(row["image_caption"])
+                title = self.get_title(row["image_caption"], url)
                 if title is None:
                     title = "Untitled"
                 published_date = row["lastmod"]
